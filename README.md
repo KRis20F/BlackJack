@@ -3,7 +3,7 @@
 ## 🔹 Antes de empezar la ronda
 - No hay cartas en juego.
 - El jugador solo puede **arrastrar fichas al área de apuesta**.
-- El botón **BET** se muestra solo si hay **al menos una ficha** en el recuadro.
+- La acción **BET** se muestra solo si hay **al menos una ficha** en el recuadro.
 
 ## 🔹 Ronda 1 (inicio de la mano)
 - Se reparten **2 cartas** al jugador y **2 al crupier** (una boca abajo).
