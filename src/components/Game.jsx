@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { GridStack } from "gridstack";
 import "gridstack/dist/gridstack.min.css";
+
+import gameController from './GameController';
+
 import cardBack from "../assets/Cards/Back.png";
 import sevenCard from "../assets/Cards/D/7.png";
 import deckX5 from "../assets/Cards/Deck/5.png";
+import deckX4 from "../assets/Cards/Deck/4.png";
+import deckX3 from "../assets/Cards/Deck/3.png";
+import deckX2 from "../assets/Cards/Deck/2.png";
+import deckX1 from "../assets/Cards/Deck/1.png";
 import chipBlack from "../assets/Chips/Black.png";
 import chipGreen from "../assets/Chips/Green.png";
 import chipRed from "../assets/Chips/Red.png";
@@ -13,10 +20,18 @@ import "../assets/css/game.css";
 import Loading from './Loading';
 
 const CHIP_COLORS = [chipBlack, chipGreen, chipRed, chipBlue, chipYellow];
+const DECK_SIZES = [deckX5, deckX4, deckX3, deckX2, deckX1]
 
 export default function BlackjackGame() {
   const [isLoading, setIsLoading] = useState(true);
   const [chips, setChips] = useState([]);
+  // const {
+  //       playerCash, setPlayerCash,
+  //       playerHand, setPlayerHand,
+  //       betCash, setBetCash,
+  //       dealerHand, setDealerHand,
+  //       activeHandIndex, setActiveHandIndex
+  //   } = gameController();
 
   useEffect(() => {
     const options = {
