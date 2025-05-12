@@ -25,13 +25,12 @@ const DECK_SIZES = [deckX5, deckX4, deckX3, deckX2, deckX1]
 export default function BlackjackGame() {
   const [isLoading, setIsLoading] = useState(true);
   const [chips, setChips] = useState([]);
-  // const {
-  //       playerCash, setPlayerCash,
-  //       playerHand, setPlayerHand,
-  //       betCash, setBetCash,
-  //       dealerHand, setDealerHand,
-  //       activeHandIndex, setActiveHandIndex
-  //   } = gameController();
+  const {
+        playerCash, setPlayerCash,
+        playerHand, setPlayerHand,
+        betCash, setBetCash,
+        dealerHand, setDealerHand,
+    } = gameController();
 
   useEffect(() => {
     const options = {

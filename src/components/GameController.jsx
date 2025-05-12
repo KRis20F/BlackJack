@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 export default function gameController() {
     const [playerCash, setPlayerCash] = useState(0);
     const [playerHand, setPlayerHand] = useState([[]]);
@@ -5,7 +7,8 @@ export default function gameController() {
     const [dealerHand, setDealerHand] = useState([]);
     const [currentRound, setCurrentRound] = useState(0);
     
-    const bet = (chip) => {
+    const updateBet = (chips) => {
+        const betValue = 0;
         const chipValues = {
             red: 1,
             blue: 5,
@@ -14,14 +17,19 @@ export default function gameController() {
             yellow: 100
         };
 
-        const betValue = chipValues[chip.color];
+        chips.forEach(chip => {
+            betValue += chipValues[chip.color];
+        });
 
         setBetCash(prev => prev += betValue)
         setPlayerCash(prev => prev -= betValue)
     }
 
     const start = () => {
-        // Peticion al Backend para guardar playerCash
+        if (betCash <= 0) return;
+        
+        // Peticion al Backend para guardar playerCash a la BD
+        
         setCurrentRound(currentRound += 1);
     }
 
@@ -30,10 +38,9 @@ export default function gameController() {
         playerHand, setPlayerHand,
         betCash, setBetCash,
         dealerHand, setDealerHand,
-        activeHandIndex, setActiveHandIndex,
         currentRound, setCurrentRound,
 
-        bet, start
+        updateBet, start
     };
 }
 
