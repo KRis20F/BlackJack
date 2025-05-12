@@ -1,5 +1,5 @@
 import React from 'react';
-import flip from '../assets/Animated/flip.gif';
+import flip from '../assets/Cards/flip.gif';
 
 export default function Loading() {
     return (

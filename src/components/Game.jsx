@@ -3,8 +3,8 @@ import { GridStack } from "gridstack";
 import "gridstack/dist/gridstack.min.css";
 import cardBack from "../assets/Cards/Back.png";
 import sevenCard from "../assets/Cards/D/7.png";
-import Baraja from "../assets/Cards/Baraja.png";
-import chipCyan from "../assets/Chips/Cyan.png";
+import deckX5 from "../assets/Cards/Deck/5.png";
+import chipBlack from "../assets/Chips/Black.png";
 import chipGreen from "../assets/Chips/Green.png";
 import chipRed from "../assets/Chips/Red.png";
 import chipBlue from "../assets/Chips/Blue.png";
@@ -12,7 +12,7 @@ import chipYellow from "../assets/Chips/Yellow.png";
 import "../assets/css/game.css";
 import Loading from './Loading';
 
-const CHIP_COLORS = [chipCyan, chipGreen, chipRed, chipBlue, chipYellow];
+const CHIP_COLORS = [chipBlack, chipGreen, chipRed, chipBlue, chipYellow];
 
 export default function BlackjackGame() {
   const [isLoading, setIsLoading] = useState(true);
@@ -129,7 +129,7 @@ export default function BlackjackGame() {
 
           {/* Mazo */}
           <div className="absolute right-[484px] top-[-20%]">
-            <img src={Baraja} alt="deck" className="pixel-border" />
+            <img src={deckX5} alt="deck" className="pixel-border" />
           </div>
         </div>
 
