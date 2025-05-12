@@ -12,7 +12,7 @@ import chipYellow from "../assets/Chips/Yellow.png";
 import "../assets/css/game.css";
 import Loading from './Loading';
 
-const CHIP_COLORS = [chipCyan, chipGreen, chipRed, chipBlue, chipYellow];
+const CHIP_COLORS = [chipRed , chipBlue, chipGreen, chipCyan, chipYellow];
 
 export default function BlackjackGame() {
   const [isLoading, setIsLoading] = useState(true);
