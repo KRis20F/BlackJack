@@ -37,7 +37,7 @@ export default function BlackjackGame() {
       disableResize: true,
       cellHeight: 47,
       column: 5,
-      margin: 0,
+      margin: 4,
       draggable: {
         handle: '.grid-stack-item-content',
         scroll: true,
@@ -50,59 +50,61 @@ export default function BlackjackGame() {
       disableOneColumnMode: true,
     };
 
-    // Initialize chips area
-    const chipsGrid = GridStack.init(options, document.querySelector('.chips-grid'));
-    
-    if (chipsGrid) {
-      chipsGrid.cellHeight(47);
-      chipsGrid.column(5);
-
-      // Add chip items
-      CHIP_COLORS.forEach((chip, i) => {
-        chipsGrid.addWidget({
-          x: i,
-          y: 0,
-          w: 1,
-          h: 1,
-          content: `
-            <div class="grid-stack-item-content cursor-move">
-              <img 
-                src="${chip.src}" 
-                alt="chip" 
-                class="w-[47px] h-[47px] hover:scale-110 transition-transform pixel-border"
-                data-chip-color="${chip.color}"
-              />
-            </div>
-          `,
-          noResize: true,
+    setTimeout(() => {
+      const chipsGrid = GridStack.init(options, '.chips-grid');
+      
+      if (chipsGrid) {
+        chipsGrid.cellHeight(47);
+        chipsGrid.column(5);
+        chipsGrid.removeAll();
+        
+        CHIP_COLORS.forEach((chip, i) => {
+          chipsGrid.addWidget({
+            x: i,
+            y: 0,
+            w: 1,
+            h: 1,
+            content: `
+              <div class="grid-stack-item-content cursor-move">
+                <img 
+                  src="${chip.src}" 
+                  alt="${chip.color} chip" 
+                  class="w-[47px] h-[47px] hover:scale-110 transition-transform pixel-border"
+                  data-chip-color="${chip.color}"
+                />
+              </div>
+            `,
+            noResize: true,
+          });
         });
-      });
-    }
+      }
 
-    // Initialize betting area
-    const bettingGrid = GridStack.init({
-      ...options,
-      acceptWidgets: true,
-      float: true,
-    }, document.querySelector('.betting-grid'));
+      // Initialize betting area
+      const bettingGrid = GridStack.init({
+        ...options,
+        acceptWidgets: true,
+        float: true,
+      }, '.betting-grid');
 
-    if (bettingGrid) {
-      // Handle chip placement
-      bettingGrid.on('added', (event, items) => {
-        const chipElement = items.el.querySelector('img');
-        const chipColor = chipElement.dataset.chipColor;
-        const chipValue = getChipValue(chipColor);
-        handleChipAdd(chipValue);
-      });
+      if (bettingGrid) {
+        bettingGrid.removeAll();
+        // Handle chip placement
+        bettingGrid.on('added', (event, items) => {
+          const chipElement = items.el.querySelector('img');
+          const chipColor = chipElement.dataset.chipColor;
+          const chipValue = getChipValue(chipColor);
+          handleChipAdd(chipValue);
+        });
 
-      // Handle chip removal
-      bettingGrid.on('removed', (event, items) => {
-        const chipElement = items.el.querySelector('img');
-        const chipColor = chipElement.dataset.chipColor;
-        const chipValue = getChipValue(chipColor);
-        handleChipRemove(chipValue);
-      });
-    }
+        // Handle chip removal
+        bettingGrid.on('removed', (event, items) => {
+          const chipElement = items.el.querySelector('img');
+          const chipColor = chipElement.dataset.chipColor;
+          const chipValue = getChipValue(chipColor);
+          handleChipRemove(chipValue);
+        });
+      }
+    }, 100);
 
     // Simulate resource loading
     setTimeout(() => {
@@ -110,8 +112,8 @@ export default function BlackjackGame() {
     }, 2000);
 
     return () => {
-      if (chipsGrid) chipsGrid.destroy(false);
-      if (bettingGrid) bettingGrid.destroy(false);
+      const grids = GridStack.getGridStack();
+      grids?.forEach(grid => grid.destroy());
     };
   }, [getChipValue, handleChipAdd, handleChipRemove]);
 
@@ -137,8 +139,7 @@ export default function BlackjackGame() {
 
           {/* Betting Zone */}
           <div className="absolute z-[9999] left-1/2 bottom-[20%] w-64 h-32 transform -translate-x-1/2">
-            <div className="betting-grid grid-stack h-full w-full border-2 border-dashed border-white/30 rounded-lg">
-            </div>
+            <div className="betting-grid grid-stack grid-stack-1 h-full w-full border-2 border-dashed border-white/30 rounded-lg"></div>
           </div>
 
           {/* Deck */}
@@ -149,8 +150,7 @@ export default function BlackjackGame() {
 
         {/* Chips Area */}
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="chips-grid grid-stack h-[47px] w-[300px]">
-          </div>
+          <div className="chips-grid grid-stack grid-stack-5 h-[47px] w-[300px]"></div>
         </div>
 
         {/* Money Information */}
