@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
 body {
-    background-color: #543d73;
+    background-color: #301d79;
+}
+
+.text-hover-yellow:hover {
+  color: #e4e42c;
 }
 
 @keyframes blink {
