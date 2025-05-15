@@ -11,30 +11,24 @@ const Navbar = ({ children }) => {
 
   const normalNavbar = (
     <div className="min-h-screen flex flex-col" role='navigation'>
-      <nav className="bg-indigo-900/95 fixed w-full z-[999999] top-0 start-0 border-b-4 border-white">
+      <nav className="bg-[#301d79] fixed w-full z-[999999] top-0 start-0 border-b-4 border-white">
         <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-9">
           <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-            <span className="self-center text-2xl font-['Press_Start_2P'] text-white">BlackJack</span>
+            <span className="self-center text-4xl font-['Press_Start_2P'] text-[#e4e42c]">BlckJck</span>
           </Link>
           
-          <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-            <Link 
-              to="/login"
-              className=" bg-white font-['Press_Start_2P'] text-sm px-4 py-2
-                       border-2 border-white shadow-[inset_-2px_-2px_0_0_#1a1a6c,inset_2px_2px_0_0_#6666ff]
-                       hover:bg-indigo-500 transition-all duration-100"
-            >
-              
-                <img src={user} alt="user" className="w-6 h-6" />
-            </Link>
-
+          <div className="flex md:order-2 space-x-4 md:space-x-4 rtl:space-x-reverse">
             <Link
-              to="/register"  
-              className=" bg-white font-['Press_Start_2P'] text-sm px-4 py-2
-                       border-2 border-white shadow-[inset_-2px_-2px_0_0_#1a1a6c,inset_2px_2px_0_0_#6666ff]
-                       hover:bg-indigo-500 transition-all duration-100"
+              to="/login"
+              className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
             >
-              <img src={add} alt="addUserIcon" className="w-6 h-6" />
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
+            >
+              Register
             </Link>
 
             <button 
@@ -51,19 +45,14 @@ const Navbar = ({ children }) => {
 
           <div className={`items-center justify-between ${isMenuOpen ? 'block' : 'hidden'} w-full md:flex md:w-auto md:order-1`}>
             <ul className="flex flex-col p-4 md:p-0 mt-4 font-['Press_Start_2P'] text-sm border-2 border-white rounded-lg 
-                         bg-indigo-900 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">
+                         bg-[#301d79] md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">
               <li>
-                <Link to="/" className="block py-2 px-3 text-white hover:text-indigo-300 rounded-sm md:p-0" aria-current="page">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/game" className="block py-2 px-3 text-white hover:text-indigo-300 rounded-sm md:p-0">
+                <Link to="/game" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
                   Play
                 </Link>
               </li>
               <li>
-                <Link to="/stats" className="block py-2 px-3 text-white hover:text-indigo-300 rounded-sm md:p-0">
+                <Link to="/stats" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
                   Stats
                 </Link>
               </li>
@@ -87,7 +76,7 @@ const Navbar = ({ children }) => {
           Menu
         </div>
         
-        {['New Game', 'Stats', 'Settings', 'Exit'].map((text) => (
+        {['Home', 'Stats', 'Exit'].map((text) => (
           <button
             key={text}
             className="w-32 py-2 px-4 bg-indigo-600 text-white border-2 border-white 
