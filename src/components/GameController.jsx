@@ -14,6 +14,8 @@ export default function useGameController() {
     const [betCash, setBetCash] = useState(0);
     const [dealerHand, setDealerHand] = useState([]);
     const [currentRound, setCurrentRound] = useState(0);
+    const [deckId, setDeckId] = useState(null);
+    const [initialCards, setInitialCards] = useState([]);
 
     const getChipValue = useCallback((chipColor) => {
         return CHIP_VALUES[chipColor] || 0;
@@ -54,6 +56,15 @@ export default function useGameController() {
 
     }, [betCash]);
 
+    const startRound = async () => {
+        const deckRes = await fetch('http://alvarfs-001-site1.qtempurl.com/Cards/GetDeck');
+        const deckData = await deckRes.json();
+        setDeckId(deckData.deck);
+        const cardsRes = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckData.deck}/4`);
+        const cardsData = await cardsRes.json();
+        setInitialCards(cardsData.cards || []);
+    };
+
     return {
         playerCash,
         setPlayerCash,
@@ -67,7 +78,10 @@ export default function useGameController() {
         handleChipRemove,
         clearBet,
         start,
-        getChipValue
+        getChipValue,
+        deckId,
+        initialCards,
+        startRound
     };
 }
 

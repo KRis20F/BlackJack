@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import add from '../assets/svg/add.svg';
-import user from '../assets/svg/user.svg';
 
 const Navbar = ({ children }) => {
   const location = useLocation();
