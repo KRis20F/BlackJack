@@ -13,10 +13,11 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.4",
     "animejs": "^4.0.2",
-    "gridstack": "^12.1.1",
+    "gridstack": "^12.1.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-draggable": "^4.4.6",
+    "react-grid-layout": "^1.5.1",
     "react-router-dom": "^7.5.3",
     "tailwindcss": "^4.1.4"
   },

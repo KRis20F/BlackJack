@@ -8,6 +8,7 @@ const Navbar = ({ children }) => {
   const isGamePage = location.pathname === '/game';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+
   const normalNavbar = (
     <div className="min-h-screen flex flex-col" role='navigation'>
       <nav className="bg-indigo-900/95 fixed w-full z-[999999] top-0 start-0 border-b-4 border-white">

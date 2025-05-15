@@ -39,9 +39,19 @@ export default function useGameController() {
         setBetCash(0);
     }, []);
 
-    const start = useCallback(() => {
+    const start = useCallback( async() => {
         if (betCash <= 0) return;
         setCurrentRound(prev => prev + 1);
+
+        let response = await fetch('http://alvarfs-001-site1.qtempurl.com/User/3/69', {
+            method: 'PUT',
+            body: JSON.stringify({
+                betCash: betCash
+            })
+        });
+        
+        console.log(response);
+
     }, [betCash]);
 
     return {

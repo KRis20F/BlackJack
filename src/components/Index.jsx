@@ -11,11 +11,34 @@ export default function Index() {
             setIsLoading(false);
         }, 1500);
 
+
         return () => clearTimeout(timer);
     }, []);
 
+    const logs = async () => {
+        try {
+            const response = await fetch('http://alvarfs-001-site1.qtempurl.com/User/3/69', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    betCash: 69
+                })
+            });
+            
+            const data = await response.json();
+            console.log('Response status:', response.status);
+            console.log('Response data:', data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    
     return (
         <>
+
+        
             {isLoading && <Loading />}
             <div className="min-h-screen flex">
                 <div className="flex-1 flex items-center justify-center text-white">
@@ -34,6 +57,7 @@ export default function Index() {
                                          transition-all duration-100 ease-in-out
                                          active:shadow-[inset_4px_4px_0_0_#1a1a6c,inset_-4px_-4px_0_0_#6666ff]
                                          active:scale-95"
+                                onClick={logs}
                             >
                                 Play Now
                             </Link>
@@ -53,11 +77,12 @@ export default function Index() {
                         </div>
                     </div>
                 </div>
+
+                
                 <div className="flex-1 flex items-center justify-center">
                     <img 
                         src={hero} 
-                        alt="Hero" 
-                        
+                        alt="Hero"  
                     />
                 </div>
             </div>
