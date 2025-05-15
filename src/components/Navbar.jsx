@@ -52,7 +52,12 @@ const Navbar = ({ children }) => {
               </li>
               <li>
                 <Link to="/stats" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
-                  Stats
+                  Leaderboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/tutorial" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
+                  Tutorial
                 </Link>
               </li>
             </ul>
@@ -75,7 +80,7 @@ const Navbar = ({ children }) => {
           Menu
         </div>
         
-        {['Home', 'Stats', 'Exit'].map((text) => (
+        {['Home', 'Leaderboard', 'Tutorial'].map((text) => (
           <button
             key={text}
             className="w-32 py-2 px-4 bg-indigo-600 text-white border-2 border-white 

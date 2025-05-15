@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import googleIcon from '../assets/svg/google.svg';
-import twitterIcon from '../assets/svg/twitter.svg';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        email: '',
+        username: '',
         password: '',
         rememberMe: false
     });
+
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -18,100 +19,75 @@ export default function Login() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Implementar la lógica de login
-        console.log('Login data:', formData);
+        setErrorMessage('');
+
+        try {
+            const response = await fetch(
+                `http://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('userId', data.id);
+                console.log('Usuario logueado, ID:', data.id);
+
+                navigate('/');
+            } else {
+                setErrorMessage('Credenciales incorrectas');
+            }
+        } catch (error) {
+            setErrorMessage('Error al conectar con el servidor');
+        }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-900 to-indigo-700">
-            <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
-                <h2 className="text-3xl font-['Press_Start_2P'] text-center mb-2">Sign In</h2>
-                <p className="text-gray-600 text-center mb-8">Enter your email and password to sign in</p>
+        <div className="min-h-screen flex items-center justify-center bg-[#301d79] font-['Press_Start_2P'] text-white">
+            <div className="bg-[#301d79] border-4 border-white p-8 w-full max-w-md">
+                <h2 className="text-xl text-center text-[#e4e42c] mb-6">LOGIN</h2>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-12">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Email</label>
+                        <label className="block text-xs mb-2">Username</label>
                         <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
+                            type="text"
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                            placeholder="name@mail.com"
+                            className="w-full px-4 py-2 bg-white text-black text-xs border border-white focus:outline-none"
+                            placeholder="yourUsername"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <label className="block text-xs mb-2">Password</label>
                         <input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                            className="w-full px-4 py-2 bg-white text-black text-xs border border-white focus:outline-none"
                             placeholder="********"
                             required
                         />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                name="rememberMe"
-                                checked={formData.rememberMe}
-                                onChange={handleChange}
-                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                            />
-                            <label className="ml-2 block text-sm text-gray-700">Remember Me</label>
-                        </div>
-                        <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
-                            Forgot password
-                        </Link>
-                    </div>
+                    {errorMessage && (
+                        <p className="text-red-500 text-xs text-center">{errorMessage}</p>
+                    )}
 
                     <button
                         type="submit"
-                        className="w-full py-3 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-['Press_Start_2P'] text-sm"
+                        className="w-full py-3 bg-[#46e446] text-[#301d79] hover:bg-[#e4e42c] transition-colors text-xs font-['Press_Start_2P'] cursor-pointer"
                     >
-                        SIGN IN
+                        ENTER
                     </button>
 
-                    <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">Or</span>
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        className="w-full py-3 px-4 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center space-x-2 mb-3"
-                        onClick={() => console.log('Google login')}
-                    >
-                        <img src={googleIcon} alt="Google" className="w-5 h-5" />
-                        <span>SIGN IN WITH GOOGLE</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        className="w-full py-3 px-4 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center space-x-2"
-                        onClick={() => console.log('Twitter login')}
-                    >
-                        <img src={twitterIcon} alt="Twitter" className="w-5 h-5" />
-                        <span>SIGN IN WITH TWITTER</span>
-                    </button>
-
-                    <p className="text-center text-sm text-gray-600">
+                    <p className="text-center text-xs">
                         Not registered?{' '}
-                        <Link to="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
-                            Create account
-                        </Link>
+                        <Link to="/register" className="underline hover:text-[#e4e42c]">Create account</Link>
                     </p>
                 </form>
             </div>
