@@ -2,16 +2,18 @@ import React, { useState, useEffect } from "react";
 import useGameController from './GameController';
 import "../assets/css/game.css";
 import Loading from './Loading';
-import Card from '../assets/Cards/Card';
-
+import DealerCards from './DealerCards';
+import PlayerCards from './PlayerCards';
 import deckX5 from "../assets/Cards/Deck/5.png";
+
 import chipBlack from "../assets/Chips/Black.png";
 import chipGreen from "../assets/Chips/Green.png";
 import chipRed from "../assets/Chips/Red.png";
 import chipBlue from "../assets/Chips/Blue.png";
 import chipYellow from "../assets/Chips/Yellow.png";
 import betGif from '../assets/Actions/BetAnimation.gif';
-// import betPng from '../assets/Bet/Bet.png';
+import startGif from '../assets/Actions/StartAnimation.gif';
+import standGif from '../assets/Actions/StartAnimation.gif';
 
 const CHIP_COLORS = [
   { src: chipBlack, color: 'Black', id: 'chip-100' },
@@ -24,6 +26,8 @@ const CHIP_COLORS = [
 export default function BlackjackGame() {
   const [isLoading, setIsLoading] = useState(true);
   const [bettingChips, setBettingChips] = useState([]);
+  const [showStartAnim, setShowStartAnim] = useState(false);
+  const [showCards, setShowCards] = useState(false);
 
   const {
     playerCash,
@@ -31,15 +35,16 @@ export default function BlackjackGame() {
     handleChipAdd,
     handleChipRemove,
     getChipValue,
-    // deckId,
-    // initialCards,
-    // startRound
+    initialCards,
+    startRound
   } = useGameController();
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 2000);
   }, []);
 
+  // Verificación de saldo correcta
+  const totalBet = bettingChips.reduce((sum, chip) => sum + getChipValue(chip.color), 0);
   const handleChipClick = (chip) => {
     const chipValue = getChipValue(chip.color);
     const isChipBetting = bettingChips.some(c => c.id === chip.id);
@@ -48,36 +53,58 @@ export default function BlackjackGame() {
       setBettingChips(prev => prev.filter(c => c.id !== chip.id));
       handleChipRemove(chipValue);
     } else {
+      if (totalBet + chipValue > playerCash) {
+        // No permitir apostar más de lo que hay en saldo
+        return;
+      }
       setBettingChips(prev => [...prev, chip]);
       handleChipAdd(chipValue);
     }
   };
-
-  // Si quieres iniciar la ronda, llama a startRound()
-  // Por ejemplo: await startRound();
 
   return (
     <>
       {isLoading && <Loading />}
       <div className="game-area select-none min-h-screen">
         {/* Dealer Area */}
-        <div className="card-container flex gap-6 ml-28 mt-8 mb-8">
-          <Card isHidden={true} />
-          <Card suit="D" value="7" />
-          <Card suit="D" value="7" />
-          <Card suit="D" value="7" />
+        <div className="card-container flex gap-6 ml-28 mt-8 mb-8 relative cursor-pointer" onClick={async () => {
+          if (!showCards && bettingChips.length > 0 && !showStartAnim) {
+            setShowStartAnim(true);
+            setShowCards(false);
+            await startRound();
+            setTimeout(() => {
+              setShowStartAnim(false);
+              setShowCards(true);
+            }, 1000);
+          }
+        }}>
+          {/* Ejemplo: GIF de STAND encima de la carta del dealer */}
+          {showCards && (
+            <img
+              src={standGif}
+              alt="Stand"
+              className="fixed top-[40px] left-[921px] w-20 z-[110]"
+            />
+          )}
+          {showStartAnim && (
+            <img src={startGif} alt="Start Animation" className="absolute left-1/2 -translate-x-1/2 top-0 z-50 w-24" />
+          )}
+          {showCards && initialCards.length >= 2 ? (
+            <DealerCards cards={initialCards.slice(0, 2)} />
+          ) : null}
         </div>
 
         {/* Player and Betting Area */}
         <div className="relative w-full h-[60vh]">
           {/* Player Cards */}
           <div className="card-container absolute z-[9999] left-[20%] bottom-[30%] flex gap-4">
-            <Card suit="D" value="7" />
-            <Card suit="D" value="7" />
+            {showCards && initialCards.length >= 4 ? (
+              <PlayerCards cards={initialCards.slice(2, 4)} />
+            ) : null}
           </div>
 
           {/* Betting Zone */}
-          <div className="absolute z-[50] left-[70%] bottom-[17%] w-57 h-49 transform -translate-x-1/2
+          <div className="absolute z-[50] left-[70%] bottom-[-16%] w-57 h-49 transform -translate-x-1/2
                        border-2 border-dashed border-white/30 rounded-lg bg-white/5 p-4 flex items-center justify-center">
             <img 
               src={betGif} 
@@ -102,14 +129,33 @@ export default function BlackjackGame() {
             </div>
             {/* Total apostado debajo de la zona de apuestas */}
             <div className="absolute left-1/2 transform -translate-x-1/2 text-yellow-400 text-3xl mt-2" style={{ bottom: '-40px', fontFamily: 'Bitty, monospace' }}>
-              {bettingChips.reduce((sum, chip) => sum + getChipValue(chip.color), 0)}₴
+              {totalBet}₴
             </div>
           </div>
 
-          {/* Deck */}
-          <div className="absolute right-[522px] top-[-34%]">
-            <img src={deckX5} alt="deck" className="pixel-border" />
-          </div>
+          {/* GIF de acción (START) en posición fija respecto al viewport con Tailwind */}
+          {!showCards && bettingChips.length > 0 && !showStartAnim && (
+            <img
+              src={startGif}
+              alt="Start"
+              className="fixed top-[60px] left-[1080px] w-20 z-[110] cursor-pointer"
+              onClick={async () => {
+                setShowStartAnim(true);
+                setShowCards(false);
+                await startRound();
+                setTimeout(() => {
+                  setShowStartAnim(false);
+                  setShowCards(true);
+                }, 1000);
+              }}
+            />
+          )}
+          {/* Mazo en posición fija con Tailwind */}
+          <img
+            src={deckX5}
+            alt="deck"
+            className="fixed top-[71px] left-[910px] w-[100px] z-[100] pixel-border"
+          />
         </div>
 
         {/* Available Chips */}
@@ -121,7 +167,7 @@ export default function BlackjackGame() {
               onClick={() => handleChipClick(chip)}
               className="cursor-pointer group relative"
             >
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 opacity-0 
+              <div className="fixed -top-8 left-1/2 transform -translate-x-1/2 opacity-0 
                            group-hover:opacity-100 transition-opacity duration-200 
                            text-white text-sm font-['Press_Start_2P']">
                 ${getChipValue(chip.color)}
