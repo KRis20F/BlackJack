@@ -9,7 +9,7 @@ export const CHIP_VALUES = {
 };
 
 export default function useGameController() {
-    const [playerCash, setPlayerCash] = useState(1000);
+    const [playerCash, setPlayerCash] = useState(100); // Start with 100€
     const [playerHand, setPlayerHand] = useState([]);
     const [betCash, setBetCash] = useState(0);
     const [dealerHand, setDealerHand] = useState([]);
@@ -22,7 +22,7 @@ export default function useGameController() {
     }, []);
 
     const handleChipAdd = useCallback((chipValue) => {
-        if (chipValue > playerCash) {
+        if (betCash + chipValue > playerCash) {
             console.log('Insufficient funds');
             return false;
         }
@@ -30,7 +30,7 @@ export default function useGameController() {
         setPlayerCash(prev => prev - chipValue);
         setBetCash(prev => prev + chipValue);
         return true;
-    }, [playerCash]);
+    }, [playerCash, betCash]);
 
     const handleChipRemove = useCallback((chipValue) => {
         setPlayerCash(prev => prev + chipValue);
@@ -56,13 +56,57 @@ export default function useGameController() {
 
     }, [betCash]);
 
+    const processCard = (card) => {
+        // Convert API values to match asset file names
+        const suitMap = {
+            'Hearts': 'Hearts',
+            'Diamonds': 'Diamonds',
+            'Clubs': 'Clubs',
+            'Spades': 'Spades'
+        };
+        
+        const valueMap = {
+            'Ace': 'A',
+            'King': 'K',
+            'Queen': 'Q',
+            'Jack': 'J',
+            '10': '10',
+            '9': '9',
+            '8': '8',
+            '7': '7',
+            '6': '6',
+            '5': '5',
+            '4': '4',
+            '3': '3',
+            '2': '2'
+        };
+
+        return {
+            suit: suitMap[card.suit] || card.suit,
+            value: valueMap[card.value] || card.value
+        };
+    };
+
     const startRound = async () => {
-        const deckRes = await fetch('http://alvarfs-001-site1.qtempurl.com/Cards/GetDeck');
-        const deckData = await deckRes.json();
-        setDeckId(deckData.deck);
-        const cardsRes = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckData.deck}/4`);
-        const cardsData = await cardsRes.json();
-        setInitialCards(cardsData.cards || []);
+        try {
+            const deckRes = await fetch('http://alvarfs-001-site1.qtempurl.com/Cards/GetDeck');
+            const deckData = await deckRes.json();
+            setDeckId(deckData.deck);
+            
+            const cardsRes = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckData.deck}/4`);
+            const cardsData = await cardsRes.json();
+            console.log('Cards received:', cardsData);
+            
+            // Las cartas vienen en formato "5S", "QC", etc.
+            const processedCards = cardsData.cards.map(cardValue => ({
+                value: cardValue, // Mantenemos el valor completo (ej: "5S")
+                suit: cardValue.slice(-1) // Tomamos el último carácter como palo
+            }));
+            
+            setInitialCards(processedCards);
+        } catch (error) {
+            console.error('Error starting round:', error);
+        }
     };
 
     return {

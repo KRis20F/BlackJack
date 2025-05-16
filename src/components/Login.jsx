@@ -38,7 +38,7 @@ export default function Login() {
                 setErrorMessage('Credenciales incorrectas');
             }
         } catch (error) {
-            setErrorMessage('Error al conectar con el servidor');
+            setErrorMessage('Error al conectar con el servidor', error);
         }
     };
 

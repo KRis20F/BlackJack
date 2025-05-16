@@ -66,51 +66,59 @@ export default function BlackjackGame() {
     <>
       {isLoading && <Loading />}
       <div className="game-area select-none min-h-screen">
-        {/* Dealer Area */}
-        <div className="card-container flex gap-6 ml-28 mt-8 mb-8 relative cursor-pointer" onClick={async () => {
-          if (!showCards && bettingChips.length > 0 && !showStartAnim) {
-            setShowStartAnim(true);
-            setShowCards(false);
-            await startRound();
-            setTimeout(() => {
-              setShowStartAnim(false);
-              setShowCards(true);
-            }, 1000);
-          }
-        }}>
-          {/* Ejemplo: GIF de STAND encima de la carta del dealer */}
-          {showCards && (
-            <img
-              src={standGif}
-              alt="Stand"
-              className="fixed top-[40px] left-[921px] w-20 z-[110]"
-            />
-          )}
-          {showStartAnim && (
-            <img src={startGif} alt="Start Animation" className="absolute left-1/2 -translate-x-1/2 top-0 z-50 w-24" />
-          )}
+        {/* Dealer Area - Fixed position */}
+        <div className="fixed top-[40px] left-[100px] flex gap-6">
           {showCards && initialCards.length >= 2 ? (
             <DealerCards cards={initialCards.slice(0, 2)} />
           ) : null}
         </div>
 
-        {/* Player and Betting Area */}
-        <div className="relative w-full h-[60vh]">
-          {/* Player Cards */}
-          <div className="card-container absolute z-[9999] left-[20%] bottom-[30%] flex gap-4">
-            {showCards && initialCards.length >= 4 ? (
-              <PlayerCards cards={initialCards.slice(2, 4)} />
-            ) : null}
+        {/* Player Cards Area */}
+        <div className="fixed top-[359px] left-[100px] flex gap-4 z-[9999]">
+          {showCards && initialCards.length >= 4 ? (
+            <PlayerCards cards={initialCards.slice(2, 4)} />
+          ) : null}
+        </div>
+
+        {/* Deck Area with Betting - Fixed position */}
+        <div className="fixed top-[75px] right-[526px] flex flex-col items-center">
+          {/* Deck and Start Button */}
+          <div className="relative">
+            {!showCards && bettingChips.length > 0 && !showStartAnim && (
+              <img
+                src={startGif}
+                alt="Start"
+                className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 w-20 z-[110] 
+                         cursor-pointer hover:scale-110 transition-transform duration-200"
+                onClick={async () => {
+                  setShowStartAnim(true);
+                  setShowCards(false);
+                  await startRound();
+                  setTimeout(() => {
+                    setShowStartAnim(false);
+                    setShowCards(true);
+                  }, 1000);
+                }}
+              />
+            )}
+            {showStartAnim && (
+              <img 
+                src={startGif} 
+                alt="Start Animation" 
+                className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 w-20 z-[110]" 
+              />
+            )}
+            <img
+              src={deckX5}
+              alt="deck"
+              className="w-[100px] z-[100] pixel-border"
+            />
           </div>
 
           {/* Betting Zone */}
-          <div className="absolute z-[50] left-[70%] bottom-[-16%] w-57 h-49 transform -translate-x-1/2
-                       border-2 border-dashed border-white/30 rounded-lg bg-white/5 p-4 flex items-center justify-center">
-            <img 
-              src={betGif} 
-              alt="Bet Animation" 
-              className="w-32 absolute -top-[62px] left-[43px]"
-            />
+          <div className="fixed top-[353px] right-[356px] w-[221px] h-[200px] z-[50]
+                       border-2 border-dashed border-white/30 rounded-lg bg-white/5 flex items-center justify-center">
+            <img src={betGif} alt="bet" className="w-[100px] z-[100] pixel-border fixed top-[282px]" />
             <div className="flex flex-wrap gap-4 justify-center items-center h-full">
               {bettingChips.map(chip => (
                 <div
@@ -128,38 +136,15 @@ export default function BlackjackGame() {
               ))}
             </div>
             {/* Total apostado debajo de la zona de apuestas */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 text-yellow-400 text-3xl mt-2" style={{ bottom: '-40px', fontFamily: 'Bitty, monospace' }}>
+            <div className="absolute left-1/2 transform -translate-x-1/2 text-yellow-400 text-3xl mt-2" 
+                 style={{ bottom: '-40px', fontFamily: 'Bitty, monospace' }}>
               {totalBet}₴
             </div>
           </div>
-
-          {/* GIF de acción (START) en posición fija respecto al viewport con Tailwind */}
-          {!showCards && bettingChips.length > 0 && !showStartAnim && (
-            <img
-              src={startGif}
-              alt="Start"
-              className="fixed top-[60px] left-[1080px] w-20 z-[110] cursor-pointer"
-              onClick={async () => {
-                setShowStartAnim(true);
-                setShowCards(false);
-                await startRound();
-                setTimeout(() => {
-                  setShowStartAnim(false);
-                  setShowCards(true);
-                }, 1000);
-              }}
-            />
-          )}
-          {/* Mazo en posición fija con Tailwind */}
-          <img
-            src={deckX5}
-            alt="deck"
-            className="fixed top-[71px] left-[910px] w-[100px] z-[100] pixel-border"
-          />
         </div>
 
         {/* Available Chips */}
-        <div className="fixed bottom-2 left-1/3 transform -translate-x-1/2 flex gap-6 z-[100] 
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex gap-6 z-[100] 
                      bg-indigo-900/80 p-4 rounded-lg border-2 border-white/30">
           {CHIP_COLORS.map(chip => (
             <div
