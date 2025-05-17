@@ -146,7 +146,11 @@ export default function BlackjackGame() {
           </div>
           {controllerGamePhase === 'ended' && (
             <div className="flex flex-col items-center gap-2">
-              {controllerGameEndReason === 'bust' ? (
+              {controllerGameEndReason === 'blackjack' ? (
+                <div className="text-green-400 text-4xl font-['Press_Start_2P'] animate-bounce">
+                  Blackjack! You Win!
+                </div>
+              ) : controllerGameEndReason === 'bust' ? (
                 <>
                   <div className="text-red-500 text-4xl font-['Press_Start_2P'] animate-bounce">
                     BUST!
@@ -158,6 +162,10 @@ export default function BlackjackGame() {
                     Game Over
                   </div>
                 </>
+              ) : controllerGameEndReason === 'push' ? (
+                <div className="text-yellow-400 text-4xl font-['Press_Start_2P'] animate-pulse">
+                  Push - It's a Tie!
+                </div>
               ) : controllerGameEndReason === 'dealer_bust' ? (
                 <div className="text-green-400 text-4xl font-['Press_Start_2P'] animate-bounce">
                   Dealer Bust! You Win!
@@ -169,10 +177,6 @@ export default function BlackjackGame() {
               ) : controllerGameEndReason === 'player_wins' ? (
                 <div className="text-green-400 text-4xl font-['Press_Start_2P'] animate-bounce">
                   You Win!
-                </div>
-              ) : controllerGameEndReason === 'push' ? (
-                <div className="text-yellow-400 text-4xl font-['Press_Start_2P']">
-                  Push - Tie Game!
                 </div>
               ) : null}
             </div>

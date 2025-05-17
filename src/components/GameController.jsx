@@ -60,37 +60,6 @@ export default function useGameController() {
 
     }, [betCash]);
 
-    const processCard = (card) => {
-        // Convert API values to match asset file names
-        const suitMap = {
-            'Hearts': 'Hearts',
-            'Diamonds': 'Diamonds',
-            'Clubs': 'Clubs',
-            'Spades': 'Spades'
-        };
-        
-        const valueMap = {
-            'Ace': 'A',
-            'King': 'K',
-            'Queen': 'Q',
-            'Jack': 'J',
-            '10': '10',
-            '9': '9',
-            '8': '8',
-            '7': '7',
-            '6': '6',
-            '5': '5',
-            '4': '4',
-            '3': '3',
-            '2': '2'
-        };
-
-        return {
-            suit: suitMap[card.suit] || card.suit,
-            value: valueMap[card.value] || card.value
-        };
-    };
-
     const startRound = async () => {
         try {
             const deckRes = await fetch('http://alvarfs-001-site1.qtempurl.com/Cards/GetDeck');
@@ -99,17 +68,30 @@ export default function useGameController() {
             
             const cardsRes = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckData.deck}/4`);
             const cardsData = await cardsRes.json();
-            // console.log('Cards received:', cardsData);
             
-            // Las cartas vienen en formato "5S", "QC", etc.
             const processedCards = cardsData.cards.map(cardValue => ({
-                value: cardValue, // Mantenemos el valor completo (ej: "5S")
-                suit: cardValue.slice(-1) // Tomamos el último carácter como palo
+                value: cardValue,
+                suit: cardValue.slice(-1)
             }));
             
             setInitialCards(processedCards);
             setGamePhase('playing');
             setCurrentRound(1);
+
+            // Verificar Blackjack natural (21 con dos cartas)
+            const playerCards = processedCards.slice(2, 4);
+            const playerValue = calculateHandValue(playerCards);
+            
+            if (playerValue === 21) {
+                console.log('Natural Blackjack! Instant win!');
+                setGamePhase('ended');
+                setGameEndReason('blackjack');
+                // Pago 3:2 para Blackjack natural
+                const blackjackPayout = betCash * 2.5;
+                setPlayerCash(prev => prev + blackjackPayout);
+                setDealerHand(processedCards.slice(0, 2)); // Mantener las cartas del dealer visibles
+            }
+
         } catch (error) {
             console.error('Error starting round:', error);
         }
@@ -119,47 +101,41 @@ export default function useGameController() {
         let value = 0;
         let aces = 0;
         
-        console.log('Calculating value for cards:', cards);
+        console.log('Starting calculation for cards:', cards);
         
+        // Primero sumamos todas las cartas que no son Ases
         cards.forEach(card => {
-            // Asegurarnos de que tenemos el objeto carta completo
-            console.log('Raw card:', card);
-            
-            // Si la carta es un string (ej: "10H"), extraer el valor
             const cardValue = typeof card === 'string' 
                 ? card.slice(0, -1) 
                 : (typeof card.value === 'string' 
                     ? card.value.slice(0, -1) 
                     : card.value);
             
-            console.log('Extracted card value:', cardValue);
+            console.log('Processing card value:', cardValue);
             
             if (cardValue === 'A') {
                 aces += 1;
-                value += 11;
-                console.log('Ace found, current value:', value);
-            } else if (['K', 'Q', 'J'].includes(cardValue)) {
+            } else if (['K', 'Q', 'J', '0'].includes(cardValue)) {
                 value += 10;
-                console.log('Face card found, current value:', value);
-            } else if (cardValue === '10') {
-                value += 10;
-                console.log('10 found, current value:', value);
+                console.log(`Added 10 for ${cardValue}, current total: ${value}`);
             } else {
                 const numValue = parseInt(cardValue);
                 if (!isNaN(numValue)) {
                     value += numValue;
-                    console.log(`Number ${numValue} found, current value:`, value);
-                } else {
-                    console.log('WARNING: Could not parse card value:', cardValue);
+                    console.log(`Added ${numValue}, current total: ${value}`);
                 }
             }
         });
         
-        // Adjust for aces
-        while (value > 21 && aces > 0) {
-            value -= 10;
-            aces -= 1;
-            console.log('Adjusted for ace, new value:', value);
+        // Ahora añadimos los Ases uno por uno
+        for (let i = 0; i < aces; i++) {
+            if (value + 11 <= 21) {
+                value += 11;
+                console.log(`Added Ace as 11, current total: ${value}`);
+            } else {
+                value += 1;
+                console.log(`Added Ace as 1, current total: ${value}`);
+            }
         }
         
         console.log('Final hand value:', value);
@@ -169,7 +145,7 @@ export default function useGameController() {
     const handleHit = async () => {
         if (gamePhase !== 'playing' || hasDoubled) {
             console.log('Cannot hit:', { gamePhase, hasDoubled });
-            return;
+            return null;
         }
         
         try {
@@ -180,22 +156,38 @@ export default function useGameController() {
                 suit: data.cards[0].slice(-1)
             };
             
+            // Primero actualizamos la mano con la nueva carta
             const newHand = [...playerHand, newCard];
-            const handValue = calculateHandValue([...initialCards.slice(2, 4), ...newHand]);
+            setPlayerHand(newHand);
             
+            // Calculamos el valor total
+            const currentCards = [...initialCards.slice(2, 4), ...newHand];
+            const handValue = calculateHandValue(currentCards);
+            
+            console.log('Current hand:', currentCards);
             console.log('Current hand value:', handValue);
             
+            // Actualizamos el contador de ronda
+            setCurrentRound(prev => prev + 1);
+            
+            // Verificamos si nos pasamos de 21
             if (handValue > 21) {
                 console.log('BUST! Hand value:', handValue);
                 setGamePhase('ended');
                 setGameEndReason('bust');
-                setPlayerHand(newHand);
+                // El jugador pierde su apuesta (no hacemos nada con playerCash)
                 return newCard;
             }
             
-            setPlayerHand(newHand);
-            setCurrentRound(prev => prev + 1);
+            // Si llegamos a 21, nos plantamos automáticamente
+            if (handValue === 21) {
+                console.log('Player reached 21, auto-standing');
+                await handleStand();
+                return newCard;
+            }
+            
             return newCard;
+            
         } catch (error) {
             console.error('Error hitting:', error);
             return null;
@@ -206,12 +198,17 @@ export default function useGameController() {
         if (gamePhase !== 'playing') return;
         
         try {
-            // Revelar la segunda carta del dealer
+            // Si ya ganamos por Blackjack natural, no necesitamos hacer nada más
+            if (gameEndReason === 'blackjack') {
+                setDealerHand(initialCards.slice(0, 2));
+                return;
+            }
+
             const dealerCards = [...initialCards.slice(0, 2)];
             let dealerValue = calculateHandValue(dealerCards);
             console.log('Dealer initial hand:', dealerValue);
 
-            // Dealer debe tomar cartas hasta tener 17 o más
+            // El dealer pide cartas hasta tener 17 o más
             while (dealerValue < 17) {
                 const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckId}/1`);
                 const data = await response.json();
@@ -221,23 +218,41 @@ export default function useGameController() {
                 };
                 dealerCards.push(newCard);
                 dealerValue = calculateHandValue(dealerCards);
-                console.log('Dealer drew card:', newCard, 'New value:', dealerValue);
+                console.log('Dealer drew card:', newCard.value, 'New total:', dealerValue);
+                
+                // Si el dealer se pasa de 21, paramos inmediatamente
+                if (dealerValue > 21) {
+                    console.log('Dealer busted with:', dealerValue);
+                    break;
+                }
+                
+                // Si el dealer tiene 17 o más, paramos
+                if (dealerValue >= 17) {
+                    console.log('Dealer stands with:', dealerValue);
+                    break;
+                }
             }
 
             setDealerHand(dealerCards);
             
-            // Comparar manos para determinar el ganador
-            const playerValue = calculateHandValue([...initialCards.slice(2, 4), ...playerHand]);
+            const playerCards = [...initialCards.slice(2, 4), ...playerHand];
+            const playerValue = calculateHandValue(playerCards);
+            
+            console.log('Final comparison - Player:', playerValue, 'Dealer:', dealerValue);
             
             let result;
             if (dealerValue > 21) {
                 result = 'dealer_bust';
-            } else if (dealerValue > playerValue) {
-                result = 'dealer_wins';
-            } else if (dealerValue < playerValue) {
-                result = 'player_wins';
-            } else {
+                setPlayerCash(prev => prev + (betCash * 2)); // Gana el doble de la apuesta
+            } else if (playerValue === dealerValue) {
                 result = 'push';
+                setPlayerCash(prev => prev + betCash); // Recupera su apuesta
+            } else if (playerValue > dealerValue) {
+                result = 'player_wins';
+                setPlayerCash(prev => prev + (betCash * 2)); // Gana el doble de la apuesta
+            } else {
+                result = 'dealer_wins';
+                // El jugador pierde su apuesta (no hacemos nada)
             }
 
             setGamePhase('ended');
