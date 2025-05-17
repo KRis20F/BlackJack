@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export const CHIP_VALUES = {
     Black: 50,
@@ -19,26 +19,110 @@ export default function useGameController() {
     const [hasDoubled, setHasDoubled] = useState(false);
     const [gamePhase, setGamePhase] = useState('betting'); // betting, playing, ended
     const [gameEndReason, setGameEndReason] = useState(null); // 'bust' or 'stand'
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userId, setUserId] = useState(null);
+
+    // Verificar si el usuario está logueado al iniciar
+    useEffect(() => {
+        const storedUserId = localStorage.getItem('userId');
+        if (storedUserId) {
+            setIsLoggedIn(true);
+            setUserId(storedUserId);
+            console.log('User logged in:', storedUserId);
+        } else {
+            console.log('No user logged in');
+            setIsLoggedIn(false);
+            setUserId(null);
+        }
+    }, []);
+
+    // Función para actualizar el saldo en el servidor
+    const updateUserCash = useCallback(async (newCash) => {
+        if (!isLoggedIn || !userId) {
+            console.log('User not logged in, skipping server update');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}/${newCash}`, {
+                method: 'PUT'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to update user cash:', response.status);
+                return;
+            }
+
+            console.log('User cash updated successfully:', { userId, newCash });
+        } catch (error) {
+            console.error('Error updating user cash:', error);
+        }
+    }, [isLoggedIn, userId]);
+
+    // Modificar setPlayerCash para que actualice el servidor cuando cambie el saldo
+    const updatePlayerCash = useCallback((newCash) => {
+        setPlayerCash(newCash);
+        updateUserCash(newCash);
+    }, [updateUserCash]);
+
+    // Modificar las funciones que afectan al saldo para usar updatePlayerCash
+    const handleGameEnd = useCallback(async (result) => {
+        setGamePhase('ended');
+        setGameEndReason(result);
+
+        let newCash = playerCash;
+        switch (result) {
+            case 'blackjack':
+                newCash = playerCash + Math.floor(betCash * 2.5);
+                break;
+            case 'player_wins':
+            case 'dealer_bust':
+                newCash = playerCash + (betCash * 2);
+                break;
+            case 'push':
+                newCash = playerCash + betCash;
+                break;
+            case 'dealer_wins':
+            case 'bust':
+                newCash = playerCash; // El jugador pierde su apuesta
+                break;
+            default:
+                newCash = 100; // Reset to default if something unexpected happens
+        }
+
+        updatePlayerCash(newCash);
+    }, [playerCash, betCash, updatePlayerCash]);
 
     const getChipValue = useCallback((chipColor) => {
         return CHIP_VALUES[chipColor] || 0;
     }, []);
 
     const handleChipAdd = useCallback((chipValue) => {
+        if (gamePhase !== 'betting') {
+            console.log('Cannot add chips after game has started');
+            return false;
+        }
+
         if (betCash + chipValue > playerCash) {
-            console.log('Insufficient funds');
+            console.log('Insufficient funds for total bet:', { totalBetAfterAdd: betCash + chipValue, playerCash });
             return false;
         }
         
-        setPlayerCash(prev => prev - chipValue);
+        updatePlayerCash(playerCash - chipValue);
         setBetCash(prev => prev + chipValue);
         return true;
-    }, [playerCash, betCash]);
+    }, [playerCash, betCash, gamePhase, updatePlayerCash]);
 
     const handleChipRemove = useCallback((chipValue) => {
-        setPlayerCash(prev => prev + chipValue);
+        if (gamePhase !== 'betting') {
+            console.log('Cannot remove chips after game has started');
+            return false;
+        }
+
+        updatePlayerCash(playerCash + chipValue);
         setBetCash(prev => prev - chipValue);
-    }, []);
+        return true;
+    }, [gamePhase, playerCash, updatePlayerCash]);
 
     const clearBet = useCallback(() => {
         setBetCash(0);
@@ -198,9 +282,9 @@ export default function useGameController() {
         if (gamePhase !== 'playing') return;
         
         try {
-            // Si ya ganamos por Blackjack natural, no necesitamos hacer nada más
             if (gameEndReason === 'blackjack') {
                 setDealerHand(initialCards.slice(0, 2));
+                await handleGameEnd('blackjack');
                 return;
             }
 
@@ -243,30 +327,25 @@ export default function useGameController() {
             let result;
             if (dealerValue > 21) {
                 result = 'dealer_bust';
-                setPlayerCash(prev => prev + (betCash * 2)); // Gana el doble de la apuesta
-            } else if (playerValue === dealerValue) {
+            } else if (playerValue === dealerValue || (playerValue === 21 && dealerValue === 21)) {
                 result = 'push';
-                setPlayerCash(prev => prev + betCash); // Recupera su apuesta
             } else if (playerValue > dealerValue) {
                 result = 'player_wins';
-                setPlayerCash(prev => prev + (betCash * 2)); // Gana el doble de la apuesta
             } else {
                 result = 'dealer_wins';
-                // El jugador pierde su apuesta (no hacemos nada)
             }
 
-            setGamePhase('ended');
-            setGameEndReason(result);
+            await handleGameEnd(result);
             
         } catch (error) {
             console.error('Error during dealer turn:', error);
         }
     };
 
-    const handleDrop = () => {
+    const handleDrop = async () => {
         if (gamePhase !== 'playing') return;
 
-        const recoveryPercentage = Math.max(50 / Math.pow(2, currentRound - 1), 1);
+        const recoveryPercentage = 100 / (currentRound + 1);
         const recoveryAmount = Math.floor(betCash * (recoveryPercentage / 100));
 
         if (recoveryAmount < 1) {
@@ -274,18 +353,67 @@ export default function useGameController() {
             return;
         }
 
-        setPlayerCash(prev => prev + recoveryAmount);
+        const newCash = playerCash + recoveryAmount;
+        await updateUserCash(newCash);
+        setPlayerCash(newCash);
         setBetCash(0);
         setGamePhase('ended');
+        setGameEndReason('drop');
     };
 
-    const handleDouble = () => {
-        if (gamePhase !== 'playing' || currentRound > 1 || playerCash < betCash) return;
+    const handleDouble = async () => {
+        if (gamePhase !== 'playing' || currentRound > 1 || playerCash < betCash || hasDoubled) {
+            console.log('Cannot double:', { gamePhase, currentRound, playerCash, betCash, hasDoubled });
+            return;
+        }
 
-        setPlayerCash(prev => prev - betCash);
-        setBetCash(prev => prev * 2);
-        setHasDoubled(true);
-        // Aquí iría la lógica para recibir una carta más
+        try {
+            // Primero verificamos que podemos doblar
+            if (playerCash < betCash) {
+                console.log('Insufficient funds to double');
+                return;
+            }
+
+            // Doblamos la apuesta
+            setPlayerCash(prev => prev - betCash);
+            setBetCash(prev => prev * 2);
+            setHasDoubled(true);
+
+            // Pedimos una carta adicional
+            const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckId}/1`);
+            const data = await response.json();
+            const newCard = {
+                value: data.cards[0],
+                suit: data.cards[0].slice(-1)
+            };
+            
+            // Actualizamos la mano con la nueva carta
+            const newHand = [...playerHand, newCard];
+            setPlayerHand(newHand);
+            
+            // Calculamos el valor total
+            const currentCards = [...initialCards.slice(2, 4), ...newHand];
+            const handValue = calculateHandValue(currentCards);
+            
+            console.log('Double down result:', { handValue, newCard });
+            
+            // Verificamos si nos pasamos de 21
+            if (handValue > 21) {
+                setGamePhase('ended');
+                setGameEndReason('bust');
+                return;
+            }
+            
+            // Automáticamente nos plantamos después de recibir la carta
+            await handleStand();
+            
+        } catch (error) {
+            console.error('Error during double:', error);
+            // Revertir cambios si hay error
+            setPlayerCash(prev => prev + betCash);
+            setBetCash(prev => prev / 2);
+            setHasDoubled(false);
+        }
     };
 
     const canDouble = useCallback(() => {
@@ -319,7 +447,8 @@ export default function useGameController() {
         canDouble,
         gamePhase,
         hasDoubled,
-        gameEndReason
+        gameEndReason,
+        isLoggedIn
     };
 }
 
