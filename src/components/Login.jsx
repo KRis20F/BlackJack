@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/game";
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -33,7 +35,7 @@ export default function Login() {
                 localStorage.setItem('userId', data.id);
                 console.log('Usuario logueado, ID:', data.id);
 
-                navigate('/');
+                navigate(from, { replace: true });
             } else {
                 setErrorMessage('Credenciales incorrectas');
             }

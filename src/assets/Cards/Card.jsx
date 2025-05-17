@@ -17,8 +17,6 @@ export default function Card({ value, isHidden = false }) {
             const suit = cardString.slice(-1); // Obtener el palo (S, H, D, C)
             let cardValue = cardString.slice(0, -1); // Obtener el valor (3, K, etc.)
             
-            // Mantener el "0" como está en lugar de convertirlo a "10"
-            // ya que los archivos están nombrados como "0.png"
             
             // Las figuras (A, K, Q, J) y números usan el mismo formato
             const imagePath = `./${suit}/${cardValue}.png`; //Like si eres un kristopher de corazon puro
@@ -33,7 +31,7 @@ export default function Card({ value, isHidden = false }) {
     };
 
     const cardSrc = getCardImage();
-    console.log('Loading card:', value, 'from path:', cardSrc); // Debug log
+    // console.log('Loading card:', value, 'from path:', cardSrc); // Debug log
 
     return (
         <img 

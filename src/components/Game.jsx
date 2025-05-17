@@ -13,7 +13,10 @@ import chipBlue from "../assets/Chips/Blue.png";
 import chipYellow from "../assets/Chips/Yellow.png";
 import betGif from '../assets/Actions/BetAnimation.gif';
 import startGif from '../assets/Actions/StartAnimation.gif';
-import standGif from '../assets/Actions/StartAnimation.gif';
+import standGif from '../assets/Actions/StandAnimation.gif';
+import hitGif from '../assets/Actions/HitAnimation.gif';
+import dropGif from '../assets/Actions/DropAnimation.gif';
+import doubleGif from '../assets/Actions/DoubleAnimation.gif';
 
 const CHIP_COLORS = [
   { src: chipBlack, color: 'Black', id: 'chip-100' },
@@ -28,6 +31,9 @@ export default function BlackjackGame() {
   const [bettingChips, setBettingChips] = useState([]);
   const [showStartAnim, setShowStartAnim] = useState(false);
   const [showCards, setShowCards] = useState(false);
+  const [roundNumber, setRoundNumber] = useState(0);
+  const [hasDoubled, setHasDoubled] = useState(false);
+  const [playerCards, setPlayerCards] = useState([]);
 
   const {
     playerCash,
@@ -36,7 +42,14 @@ export default function BlackjackGame() {
     handleChipRemove,
     getChipValue,
     initialCards,
-    startRound
+    startRound,
+    handleHit: controllerHit,
+    handleStand: controllerStand,
+    handleDrop: controllerDrop,
+    handleDouble: controllerDouble,
+    gamePhase: controllerGamePhase,
+    gameEndReason: controllerGameEndReason,
+    dealerHand
   } = useGameController();
 
   useEffect(() => {
@@ -45,6 +58,8 @@ export default function BlackjackGame() {
 
   // Verificación de saldo correcta
   const totalBet = bettingChips.reduce((sum, chip) => sum + getChipValue(chip.color), 0);
+  const canDouble = playerCash >= totalBet && controllerGamePhase === 'playing' && roundNumber === 1;
+
   const handleChipClick = (chip) => {
     const chipValue = getChipValue(chip.color);
     const isChipBetting = bettingChips.some(c => c.id === chip.id);
@@ -62,29 +77,162 @@ export default function BlackjackGame() {
     }
   };
 
+  const handleHit = async () => {
+    console.log('Hit attempted:', { controllerGamePhase, hasDoubled });
+    if (controllerGamePhase !== 'playing' || hasDoubled) {
+      console.log('Cannot hit - game phase or doubled state prevents it');
+      return;
+    }
+    
+    const newCard = await controllerHit();
+    console.log('New card received:', newCard);
+    
+    if (newCard) {
+      setRoundNumber(prev => prev + 1);
+      setPlayerCards(prev => [...prev, newCard]);
+    }
+  };
+  
+  const handleStand = async () => {
+    console.log('Stand attempted:', { controllerGamePhase });
+    if (controllerGamePhase !== 'playing') return;
+    await controllerStand();
+    console.log('Stand successful');
+  };
+  
+  const handleDrop = async () => {
+    console.log('Drop attempted:', { controllerGamePhase });
+    if (controllerGamePhase !== 'playing') return;
+    await controllerDrop();
+    console.log('Drop successful');
+  };
+  
+  const handleDouble = async () => {
+    console.log('Double attempted:', { canDouble, playerCash, totalBet, roundNumber });
+    if (!canDouble) return;
+    await controllerDouble();
+    setHasDoubled(true);
+    console.log('Double successful');
+  };
+
   return (
     <>
       {isLoading && <Loading />}
       <div className="game-area select-none min-h-screen">
         {/* Dealer Area - Fixed position */}
-        <div className="fixed top-[40px] left-[100px] flex gap-6">
+        <div className="fixed top-[65px] left-[240px] flex gap-6">
           {showCards && initialCards.length >= 2 ? (
-            <DealerCards cards={initialCards.slice(0, 2)} />
+            <DealerCards 
+              cards={controllerGamePhase === 'ended' ? dealerHand : initialCards.slice(0, 2)} 
+              gamePhase={controllerGamePhase}
+            />
           ) : null}
         </div>
 
         {/* Player Cards Area */}
-        <div className="fixed top-[359px] left-[100px] flex gap-4 z-[9999]">
-          {showCards && initialCards.length >= 4 ? (
-            <PlayerCards cards={initialCards.slice(2, 4)} />
-          ) : null}
+        <div className="fixed top-[359px] left-[240px] flex flex-col items-center">
+          <div className="flex gap-4 z-[9999]">
+            {showCards && (
+              <PlayerCards 
+                cards={[
+                  ...initialCards.slice(2, 4), 
+                  ...playerCards
+                ].map(card => ({
+                  value: card.value,
+                  suit: card.suit
+                }))} 
+              />
+            )}
+          </div>
+          {controllerGamePhase === 'ended' && (
+            <div className="flex flex-col items-center gap-2">
+              {controllerGameEndReason === 'bust' ? (
+                <>
+                  <div className="text-red-500 text-4xl font-['Press_Start_2P'] animate-bounce">
+                    BUST!
+                  </div>
+                  <div className="text-white text-xl font-['Press_Start_2P']">
+                    You went over 21
+                  </div>
+                  <div className="text-red-400 text-xl font-['Press_Start_2P']">
+                    Game Over
+                  </div>
+                </>
+              ) : controllerGameEndReason === 'dealer_bust' ? (
+                <div className="text-green-400 text-4xl font-['Press_Start_2P'] animate-bounce">
+                  Dealer Bust! You Win!
+                </div>
+              ) : controllerGameEndReason === 'dealer_wins' ? (
+                <div className="text-red-400 text-4xl font-['Press_Start_2P']">
+                  Dealer Wins!
+                </div>
+              ) : controllerGameEndReason === 'player_wins' ? (
+                <div className="text-green-400 text-4xl font-['Press_Start_2P'] animate-bounce">
+                  You Win!
+                </div>
+              ) : controllerGameEndReason === 'push' ? (
+                <div className="text-yellow-400 text-4xl font-['Press_Start_2P']">
+                  Push - Tie Game!
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* Deck Area with Betting - Fixed position */}
         <div className="fixed top-[75px] right-[526px] flex flex-col items-center">
-          {/* Deck and Start Button */}
+          {/* Deck Stack with Action Buttons */}
           <div className="relative">
-            {!showCards && bettingChips.length > 0 && !showStartAnim && (
+            {/* HIT sobre el deck */}
+            {showCards && !hasDoubled && controllerGamePhase === 'playing' && (
+              <div className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 z-[110]">
+                <img
+                  src={hitGif}
+                  alt="Hit"
+                  className="w-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+                  onClick={handleHit}
+                />
+              </div>
+            )}
+
+            {/* STAND sobre las cartas del dealer */}
+            {showCards && !hasDoubled && controllerGamePhase === 'playing' && (
+              <div className="fixed top-[0px] left-[100px] z-[110]">
+                <img
+                  src={standGif}
+                  alt="Stand"
+                  className="w-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+                  onClick={handleStand}
+                />
+              </div>
+            )}
+
+            {/* DROP a la derecha */}
+            {showCards && !hasDoubled && controllerGamePhase === 'playing' && (
+              <div className="absolute -top-[40px] right-[-203px]">
+                <img
+                  src={dropGif}
+                  alt="Drop"
+                  className="w-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+                  onClick={handleDrop}
+                />
+              </div>
+            )}
+
+            {/* DOUBLE cuando sea posible */}
+            {showCards && !hasDoubled && roundNumber === 1 && playerCash >= totalBet && controllerGamePhase === 'playing' && (
+              <div className="absolute -top-[40px] left-[-150px]">
+                <img
+                  src={doubleGif}
+                  alt="Double"
+                  className="w-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+                  onClick={handleDouble}
+                />
+              </div>
+            )}
+
+            {/* START solo en fase inicial */}
+            {!showCards && bettingChips.length > 0 && !showStartAnim && controllerGamePhase === 'betting' && (
               <img
                 src={startGif}
                 alt="Start"
@@ -101,6 +249,8 @@ export default function BlackjackGame() {
                 }}
               />
             )}
+
+            {/* Animación de inicio */}
             {showStartAnim && (
               <img 
                 src={startGif} 
@@ -108,6 +258,8 @@ export default function BlackjackGame() {
                 className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 w-20 z-[110]" 
               />
             )}
+
+            {/* Deck */}
             <img
               src={deckX5}
               alt="deck"

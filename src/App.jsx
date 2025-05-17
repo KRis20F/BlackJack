@@ -5,6 +5,8 @@ import Game from './components/Game';
 import Login from './components/Login';
 import Register from './components/Register';
 import Navbar from './components/Navbar';
+import Leaderboard from './components/Leaderboard';
+import ProtectedRoute from './components/ProtectedRoute';
 import "./assets/css/index.css";
 import "./assets/css/game.css";
 
@@ -13,11 +15,32 @@ function App() {
     <Router>
       <Navbar>
         <Routes>
+          {/* Rutas públicas */}
           <Route path="/" element={<Index />} />
-          <Route path="/game" element={<Game />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/stats" element={<div className="min-h-screen flex items-center justify-center text-white font-['Press_Start_2P']">Statistics Coming Soon...</div>} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+
+          {/* Rutas protegidas */}
+          <Route 
+            path="/game" 
+            element={
+              <ProtectedRoute>
+                <Game />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/stats" 
+            element={
+              <ProtectedRoute>
+                <div className="min-h-screen flex items-center justify-center text-white font-['Press_Start_2P']">
+                  Statistics Coming Soon...
+                </div>
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Navbar>
     </Router>
