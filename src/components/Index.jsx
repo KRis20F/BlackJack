@@ -23,7 +23,7 @@ export default function Index() {
                 <div className="flex-1 flex items-center justify-center text-white">
                     <div className="space-y-12">
                         <h1 className="text-6xl font-['Press_Start_2P'] text-center leading-relaxed">
-                            BlckJck<br/>Game
+                            Go <span className="text-[#67ed67]">big</span> or <span className="text-[#e0366c]">bust</span>.
                         </h1>
                         
                         <div className="space-y-6 flex justify-center items-center">

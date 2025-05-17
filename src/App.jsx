@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Navbar from './components/Navbar';
 import Leaderboard from './components/Leaderboard';
+import Tutorial from './components/Tutorial';
 import ProtectedRoute from './components/ProtectedRoute';
 import "./assets/css/index.css";
 import "./assets/css/game.css";
@@ -20,6 +21,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/tutorial" element={<Tutorial />} />
 
           {/* Rutas protegidas */}
           <Route 
