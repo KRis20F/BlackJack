@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function Leaderboard() {
-  const players = [
-    { name: "PLAYER NAME", cash: 58 },
-    { name: "PLAYER NAME", cash: 56 },
-    { name: "PLAYER NAME", cash: 55 },
-    { name: "PLAYER NAME", cash: 50 },
-    { name: "PLAYER NAME", cash: 49 },
-    { name: "PLAYER NAME", cash: 46 },
-    { name: "PLAYER NAME", cash: 44 },
-    { name: "PLAYER NAME", cash: 42 },
-    { name: "PLAYER NAME", cash: 40 },
-    { name: "PLAYER NAME", cash: 38 }
-  ];
+  const [players, setPlayers] = useState([]);
+
+  useEffect(() => {
+    fetch('http://alvarfs-001-site1.qtempurl.com/User')
+      .then(response => response.json())
+      .then(data => {
+        setPlayers(data);
+      })
+      .catch(error => {
+        console.error('Error fetching players:', error);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-indigo-900/95 pt-24 pb-8 px-8 font-['Press_Start_2P']">
@@ -32,11 +32,11 @@ export default function Leaderboard() {
           let bgColor = 'bg-purple-500/50 text-white';
 
           if (index === 0) {
-            bgColor = 'bg-[#e4e42c] text-white'; // Gold
+            bgColor = 'bg-[#e4e42c] text-white';
           } else if (index === 1) {
-            bgColor = 'bg-[#c0c0c0] text-white'; // Silver
+            bgColor = 'bg-[#c0c0c0] text-white';
           } else if (index === 2) {
-            bgColor = 'bg-[#cd7f32] text-white'; // Bronze
+            bgColor = 'bg-[#cd7f32] text-white';
           }
 
           return (
@@ -47,7 +47,7 @@ export default function Leaderboard() {
               <div className="flex items-center gap-4">
                 <span className="text-2xl">{index + 1}.</span>
                 <span className="w-2"></span> {/* Separador */}
-                <span className="text-xl">{player.name}</span>
+                <span className="text-xl">{player.username}</span>
               </div>
               <span className="text-2xl font-bold">
                 {player.cash}
@@ -55,11 +55,6 @@ export default function Leaderboard() {
             </div>
           );
         })}
-      </div>
-
-      {/* Footer */}
-      <div className="text-center mt-12 text-purple-300/50">
-        <p>www.blckjck.com</p>
       </div>
     </div>
   );
