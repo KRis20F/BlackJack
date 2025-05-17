@@ -13,7 +13,7 @@ import "./assets/css/game.css";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/BlackJack">
       <Navbar>
         <Routes>
           {/* Rutas públicas */}

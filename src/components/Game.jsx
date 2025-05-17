@@ -53,14 +53,31 @@ export default function BlackjackGame() {
   } = useGameController();
 
   useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    if (!storedUserId && window.location.pathname !== '/login') {
+      // Redirigir al login solo si no estamos ya en /login y no hay userId
+      window.location.href = '/login';
+      return;
+    }
     setTimeout(() => setIsLoading(false), 2000);
   }, []);
+
+  // Si el usuario no está logueado, no renderizamos nada
+  if (!localStorage.getItem('userId')) {
+    return null;
+  }
 
   // Verificación de saldo correcta
   const totalBet = bettingChips.reduce((sum, chip) => sum + getChipValue(chip.color), 0);
   const canDouble = playerCash >= totalBet && controllerGamePhase === 'playing' && roundNumber === 1;
 
   const handleChipClick = (chip) => {
+    // No permitir quitar fichas si ya empezó el juego
+    if (controllerGamePhase !== 'betting') {
+      console.log('Cannot modify bets after game has started');
+      return;
+    }
+
     const chipValue = getChipValue(chip.color);
     const isChipBetting = bettingChips.some(c => c.id === chip.id);
 
@@ -68,12 +85,19 @@ export default function BlackjackGame() {
       setBettingChips(prev => prev.filter(c => c.id !== chip.id));
       handleChipRemove(chipValue);
     } else {
-      if (totalBet + chipValue > playerCash) {
-        // No permitir apostar más de lo que hay en saldo
-        return;
+      // Verificar si podemos hacer la apuesta
+      if (chipValue <= playerCash) {
+        setBettingChips(prev => [...prev, chip]);
+        const success = handleChipAdd(chipValue);
+        if (!success) {
+          setBettingChips(prev => prev.filter(c => c.id !== chip.id));
+        }
+      } else {
+        console.log('Cannot bet: insufficient funds', {
+          attempted: chipValue,
+          available: playerCash
+        });
       }
-      setBettingChips(prev => [...prev, chip]);
-      handleChipAdd(chipValue);
     }
   };
 
@@ -274,13 +298,28 @@ export default function BlackjackGame() {
           {/* Betting Zone */}
           <div className="fixed top-[353px] right-[356px] w-[221px] h-[200px] z-[50]
                        border-2 border-dashed border-white/30 rounded-lg bg-white/5 flex items-center justify-center">
-            <img src={betGif} alt="bet" className="w-[100px] z-[100] pixel-border fixed top-[282px]" />
+            {/* Mostrar GIF de double solo cuando sea posible y estemos en fase de juego */}
+            {showCards && controllerGamePhase === 'playing' && roundNumber === 1 && !hasDoubled && playerCash >= betCash ? (
+              <img 
+                src={doubleGif}
+                alt="double"
+                className="w-[100px] z-[100] pixel-border fixed top-[282px]"
+                onClick={handleDouble}
+              />
+            ) : (
+              <img 
+                src={betGif}
+                alt="bet"
+                className="w-[100px] z-[100] pixel-border fixed top-[282px]"
+              />
+            )}
             <div className="flex flex-wrap gap-4 justify-center items-center h-full">
               {bettingChips.map(chip => (
                 <div
                   key={chip.id}
                   onClick={() => handleChipClick(chip)}
-                  className="cursor-pointer transform hover:scale-110 transition-all duration-200"
+                  className={`cursor-pointer transform hover:scale-110 transition-all duration-200 
+                            ${controllerGamePhase !== 'betting' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <img
                     src={chip.src}
