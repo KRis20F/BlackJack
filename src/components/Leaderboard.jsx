@@ -4,7 +4,7 @@ export default function Leaderboard() {
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
-    fetch('http://alvarfs-001-site1.qtempurl.com/User')
+    fetch('https://blackjackapi-1.onrender.com/User')
       .then(response => response.json())
       .then(data => {
         setPlayers(data);
