@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import hero from '../assets/Website/index.png';
 import leaderboard from '../assets/Website/chips.png';
+import question from '../assets/Website/question.gif';
 import Loading from './Loading';
 
 export default function Index() {
@@ -96,8 +97,8 @@ export default function Index() {
                     </Link>
                 </div>
                 <img
-                    src="/assets/Website/hero.png"
-                    alt="Tutorial"
+                    src={question}
+                    alt="Question"
                     className="w-full md:w-1/2 mb-8 md:mb-0 md:mr-10"
                 />
             </section>

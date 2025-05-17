@@ -18,13 +18,13 @@ const Navbar = ({ children }) => {
           <div className="flex md:order-2 space-x-4 md:space-x-4 rtl:space-x-reverse">
             <Link
               to="/login"
-              className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
+              className="block py-2 px-3 text-[#67ed67] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
+              className="block py-2 px-3 text-[#e0366c] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
             >
               Register
             </Link>
