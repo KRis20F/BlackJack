@@ -58,6 +58,20 @@ export default function useGameController() {
             setIsLoggedIn(true);
             setUserId(storedUserId);
             console.log('User logged in:', storedUserId);
+
+            // Sincronizar el cash real del backend
+            fetch(`http://alvarfs-001-site1.qtempurl.com/User/${storedUserId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && typeof data.cash === 'number') {
+                        setPlayerCash(data.cash);
+                        localStorage.setItem('playerCash', data.cash);
+                        console.log('Cash sincronizado desde backend:', data.cash);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching user cash from backend:', err);
+                });
         } else {
             console.log('No user logged in');
             setIsLoggedIn(false);
@@ -327,7 +341,7 @@ export default function useGameController() {
         }
     };
 
-    const handleStand = async () => {
+    const handleStand = async (customPlayerHand = null) => {
         if (gamePhase !== 'playing') return;
         
         try {
@@ -368,7 +382,7 @@ export default function useGameController() {
 
             setDealerHand(dealerCards);
             
-            const playerCards = [...initialCards.slice(2, 4), ...playerHand];
+            const playerCards = customPlayerHand ?? [...initialCards.slice(2, 4), ...playerHand];
             const playerValue = calculateHandValue(playerCards);
             
             console.log('Final comparison - Player:', playerValue, 'Dealer:', dealerValue);
@@ -478,7 +492,7 @@ export default function useGameController() {
             }
             
             // Automáticamente nos plantamos después de recibir la carta
-            await handleStand();
+            await handleStand([...initialCards.slice(2, 4), ...newHand]);
             
             return newCard;
             

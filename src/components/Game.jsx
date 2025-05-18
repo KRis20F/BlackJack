@@ -409,8 +409,8 @@ export default function BlackjackGame() {
               </div>
             )}
 
-            {/* SPLIT cuando sea posible */}
-            {showCards && canSplit() && (
+            {/* SPLIT oculto temporalmente: opción deshabilitada */}
+            {/* {showCards && canSplit() && (
               <div className="absolute -top-[40px] left-[-250px]">
                 <img
                   src={splitGif}
@@ -419,7 +419,7 @@ export default function BlackjackGame() {
                   onClick={handleSplit}
                 />
               </div>
-            )}
+            )} */}
 
             {/* STAND sobre las cartas del dealer */}
             {showCards && !hasDoubled && controllerGamePhase === 'playing' && (
