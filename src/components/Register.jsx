@@ -30,7 +30,7 @@ export default function Register() {
         }
 
         try {
-            const response = await fetch('https://blackjackapi-1.onrender.com/User/', {
+            const response = await fetch('https://alvarfs-001-site1.qtempurl.com/User', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

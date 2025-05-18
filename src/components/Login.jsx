@@ -27,7 +27,7 @@ export default function Login() {
 
         try {
             const response = await fetch(
-                `https://blackjackapi-1.onrender.com/User/${formData.username}/${formData.password}`
+                `https://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`
             );
 
             if (response.ok) {

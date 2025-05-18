@@ -80,9 +80,7 @@ const Navbar = ({ children }) => {
         </div>
         
         {[
-          { text: 'Play', path: '/game' },
-          { text: 'Leaderboard', path: '/leaderboard' },
-          { text: 'Tutorial', path: '/tutorial' }
+          { text: 'Go Back', path: '/' }
         ].map(({ text, path }) => (
           <Link
             key={text}
