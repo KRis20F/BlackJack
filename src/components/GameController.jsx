@@ -125,6 +125,7 @@ export default function useGameController() {
         setGameEndReason(result);
 
         let newCash = playerCash;
+        console.log('[handleGameEnd] result:', result, 'betCash:', betCash, 'hasDoubled:', hasDoubled, 'playerCash:', playerCash);
         switch (result) {
             case 'blackjack':
                 newCash = playerCash + Math.floor(betCash * 2.5);
@@ -138,12 +139,13 @@ export default function useGameController() {
                 break;
             case 'dealer_wins':
             case 'bust':
-                newCash = playerCash; // El jugador pierde su apuesta
+                // No se suma nada, el jugador pierde toda la apuesta (incluyendo double)
+                newCash = playerCash;
                 break;
             default:
-                newCash = playerCash; // No reset automático, solo mantener el saldo actual
+                newCash = playerCash;
         }
-
+        console.log('[handleGameEnd] newCash:', newCash);
         updatePlayerCash(newCash);
     }, [playerCash, betCash, updatePlayerCash]);
 
