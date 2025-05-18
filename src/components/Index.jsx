@@ -16,7 +16,7 @@ export default function Index() {
                         
                         <div className="space-y-6 flex justify-center items-center">
                             <Link 
-                                to="/login" 
+                                to="/game" 
                                 className="m-0 block w-64 py-4 px-8 bg-indigo-600 text-white border-2 border-white 
                                          font-['Press_Start_2P'] text-lg uppercase text-center tracking-wide
                                          shadow-[inset_-4px_-4px_0_0_#1a1a6c,inset_4px_4px_0_0_#6666ff]
