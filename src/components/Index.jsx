@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import hero from '../assets/Website/index.png';
+import hero from '../assets/Website/Index.png';
 import leaderboard from '../assets/Website/chips.png';
 import question from '../assets/Website/question.gif';
 import Loading from './Loading';
