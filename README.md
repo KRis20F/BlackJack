@@ -231,3 +231,103 @@ https://github.com/alvarfs/BlackJackApi/
 
 - 💸 Requisitos de saldo:
   - No puedes usar **DOBLAR** ni **DIVIDIR** si no tienes suficiente saldo para doblar tu apuesta inicial.
+
+# BlackJack Game 🎮
+
+## Justificación y Motivación del Proyecto
+
+Este proyecto de BlackJack nace de la necesidad de crear una experiencia de juego moderna y accesible que combine:
+
+- **Diseño Retro**: Estética pixel art que evoca la nostalgia de los juegos clásicos
+- **Jugabilidad Moderna**: Interfaz intuitiva y responsive con animaciones fluidas
+- **Accesibilidad**: Implementación web que permite jugar desde cualquier dispositivo
+- **Educación**: Ayuda a entender conceptos matemáticos de probabilidad y toma de decisiones
+
+## Esquema de Arquitectura
+
+El proyecto sigue una arquitectura Model-Vista-Controlador (MVC) implementada con React:
+
+```
+BlackJack/
+├── src/
+│   ├── components/         # Vista (Components)
+│   │   ├── Game.jsx       # Vista principal del juego
+│   │   ├── PlayerCards.jsx
+│   │   └── DealerCards.jsx
+│   ├── context/           # Modelo (Context)
+│   │   └── GameContext.jsx
+│   ├── controllers/       # Controlador
+│   │   └── GameController.jsx
+│   └── assets/           # Recursos estáticos
+│       ├── Cards/
+│       ├── Chips/
+│       └── Actions/
+```
+
+## Explicación MVC Detallada
+
+### Modelo (Context)
+- **GameContext.jsx**: 
+  - Gestiona el estado global del juego
+  - Mantiene el estado de las cartas, apuestas y dinero
+  - Proporciona métodos para modificar el estado
+  - Implementa la lógica de persistencia de datos
+
+### Vista (Components)
+- **Game.jsx**: 
+  - Renderiza la interfaz principal
+  - Maneja la interacción del usuario
+  - Muestra las animaciones y efectos visuales
+  - Implementa el diseño responsive
+
+- **PlayerCards.jsx & DealerCards.jsx**:
+  - Componentes especializados para mostrar cartas
+  - Manejan animaciones específicas
+  - Implementan lógica de visualización de cartas
+
+### Controlador
+- **GameController.jsx**:
+  - Implementa la lógica del juego
+  - Maneja las reglas del BlackJack
+  - Procesa las acciones del jugador
+  - Calcula resultados y pagos
+  - Gestiona el flujo del juego
+
+## Propuestas de Mejora y Nuevas Funcionalidades
+
+### Funcionalidad de Split (En Desarrollo) 🔄
+- Permitir dividir pares de cartas iguales
+- Jugar dos manos simultáneamente
+- Implementar apuestas independientes por mano
+- Añadir animaciones específicas para el split
+
+### Otras Mejoras Propuestas
+1. **Multijugador**
+   - Implementar salas de juego
+   - Sistema de chat en tiempo real
+   - Ranking de jugadores
+
+2. **Personalización**
+   - Temas visuales alternativos
+   - Diseños de cartas personalizables
+   - Fichas personalizadas
+
+3. **Características Avanzadas**
+   - Sistema de logros
+   - Estadísticas detalladas
+   - Tutorial interactivo
+   - Modo torneo
+
+4. **Optimizaciones**
+   - Mejora del rendimiento
+   - Soporte offline
+   - Adaptación a dispositivos móviles
+   - Internacionalización
+
+### Roadmap de Desarrollo
+1. ✅ Implementación base del juego
+2. ✅ Sistema de apuestas
+3. ✅ Animaciones y efectos visuales
+4. 🔄 Funcionalidad de Split
+5. 📋 Sistema de logros
+6. �� Modo multijugador

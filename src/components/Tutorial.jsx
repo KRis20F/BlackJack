@@ -5,7 +5,6 @@ import before from '../assets/Website/round0.png';
 import round1 from '../assets/Website/round1.png';
 import drop from '../assets/Website/drop.gif';
 import double from '../assets/Website/double.gif';
-import split from '../assets/Website/split.gif';
 import round2 from '../assets/Website/round2.png';
 import Loading from './Loading';
 
