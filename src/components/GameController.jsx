@@ -398,23 +398,7 @@ export default function useGameController() {
             if (dealerValue > 21) {
                 result = 'dealer_bust';
             } else if (playerValue === dealerValueFinal) {
-                // Ambos tienen el mismo valor
-                if (playerValue === 21 && dealerValue === 21) {
-                  // Ambos tienen 21
-                  const playerNatural = playerCards.length === 2;
-                  const dealerNatural = dealerCards.length === 2;
-                  if (playerNatural && dealerNatural) {
-                    result = 'push'; // Ambos blackjack natural
-                  } else if (playerNatural) {
-                    result = 'player_wins'; // Jugador blackjack natural
-                  } else if (dealerNatural) {
-                    result = 'dealer_wins'; // Dealer blackjack natural
-                  } else {
-                    result = 'push'; // Ambos 21, pero no blackjack natural
-                  }
-                } else {
-                  result = 'push'; // Empate normal para otros valores
-                }
+                result = 'push';
             } else if (playerValue > dealerValueFinal) {
                 result = 'player_wins';
             } else {
