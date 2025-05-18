@@ -599,29 +599,6 @@ export default function BlackjackGame() {
             );
           })}
         </div>
-
-        {/* Money Information */}
-        <div className="fixed right-4 top-4 text-white font-['Press_Start_2P'] text-sm">
-          Cash: ${playerCash}
-          {betCash > 0 && (
-            <div className="mt-2">
-              Bet: ${betCash}
-            </div>
-          )}
-        </div>
-
-        {/* GO BACK button */}
-        <div className="fixed right-4 top-24">
-          <button
-            onClick={() => {
-              resetGame();
-              window.location.href = '/menu';
-            }}
-            className="bg-blue-600 text-white px-4 py-2 rounded font-['Press_Start_2P'] text-sm hover:bg-blue-700 transition-colors"
-          >
-            GO BACK
-          </button>
-        </div>
       </div>
     </>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
+import useGameController from './GameController';
 
 const Navbar = ({ children }) => {
   const location = useLocation();
@@ -125,8 +126,11 @@ const Navbar = ({ children }) => {
     </div>
   );
 
+  const { playerCash, betCash } = useGameController();
+
   const gameNavbar = (
     <div className="min-h-screen flex">
+      
       <main className="flex-1">
         {children}
       </main>
@@ -180,6 +184,13 @@ const Navbar = ({ children }) => {
         >
           Logout
         </button>
+        {/* Money Information: bottom right, always visible on /game */}
+        <div className="fixed right-6 bottom-6 bg-indigo-800/90 px-5 py-3 rounded-lg border-2 border-white text-white font-['Press_Start_2P'] text-base z-[10001] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] pointer-events-none select-none flex flex-col items-end">
+          <span>Cash: ${playerCash}</span>
+          {betCash > 0 && (
+            <span className="mt-1">Bet: ${betCash}</span>
+          )}
+        </div>
       </nav>
     </div>
   );
