@@ -26,21 +26,13 @@ export default function Login() {
         e.preventDefault();
         setErrorMessage('');
         setIsLoading(true);
-
+        
         try {
-            console.log('Intentando login con:', formData.username);
-            
-            // Usar el proxy configurado en vite.config.js
-            const url = `/api/User/${formData.username}/${formData.password}`;
-            console.log('URL de login:', url);
-
-            const response = await fetch(url, {
-                headers: {
-                    'Accept': 'text/plain'
-                }
-            });
             const text = await response.text();
-            console.log('Respuesta del servidor:', text);
+
+            const response = await fetch(
+                `https://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`
+            );
 
             if (response.ok) {
                 try {
