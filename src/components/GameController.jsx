@@ -386,27 +386,24 @@ export default function useGameController() {
 
             setDealerHand(dealerCards);
             
-            // Usar la mano real del dealer y del jugador para la comparación final
-            dealerCards = dealerHand.length > 0 ? dealerHand : dealerCards;
-            const playerCards = customPlayerHand ?? (playerHand.length > 0 ? playerHand : initialCards.slice(2, 4));
-            // FORZAR que playerCards y dealerCards sean SIEMPRE las manos reales finales
-            dealerCards = dealerHand.length > 0 ? dealerHand : dealerCards;
-            const finalPlayerHand = playerHand.length > 0 ? playerHand : playerCards;
-            const finalDealerHand = dealerHand.length > 0 ? dealerHand : dealerCards;
+            // Usar siempre las manos locales finales para la comparación
+            const finalPlayerHand = customPlayerHand ?? (playerHand.length > 0 ? playerHand : initialCards.slice(2, 4));
+            const finalDealerHand = dealerCards; // variable local, no state
+
             const playerValue = calculateHandValue(finalPlayerHand);
             const dealerValueFinal = calculateHandValue(finalDealerHand);
-            
-            console.log('Final comparison - Player:', playerValue, 'Dealer:', dealerValueFinal);
-            
+
+            console.log('Final comparison - Player:', playerValue, finalPlayerHand, 'Dealer:', dealerValueFinal, finalDealerHand);
+
             let result;
-            if (dealerValue > 21) {
+            if (dealerValueFinal > 21) {
                 result = 'dealer_bust';
-            } else if (playerValue === dealerValueFinal) {
-                result = 'push';
             } else if (playerValue > dealerValueFinal) {
                 result = 'player_wins';
-            } else {
+            } else if (playerValue < dealerValueFinal) {
                 result = 'dealer_wins';
+            } else {
+                result = 'push';
             }
 
             await handleGameEnd(result);
