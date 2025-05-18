@@ -213,7 +213,7 @@ export default function BlackjackGame() {
           <div className="relative">
             {/* HIT sobre el deck */}
             {showCards && !hasDoubled && controllerGamePhase === 'playing' && (
-              <div className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 z-[110]">
+              <div className="absolute w-[79px] -top-[40px] left-1/2 transform -translate-x-1/2 z-[110]">
                 <img
                   src={hitGif}
                   alt="Hit"
@@ -229,7 +229,7 @@ export default function BlackjackGame() {
                 <img
                   src={standGif}
                   alt="Stand"
-                  className="w-20 cursor-pointer hover:scale-110 transition-transform duration-200"
+                  className="w-20 fixed top-4 left-[298px]  cursor-pointer hover:scale-110 transition-transform duration-200"
                   onClick={handleStand}
                 />
               </div>
@@ -291,7 +291,7 @@ export default function BlackjackGame() {
             <img
               src={deckX5}
               alt="deck"
-              className="w-[100px] z-[100] pixel-border"
+              className="w-[93px] z-[100] m-1 pixel-border"
             />
           </div>
 

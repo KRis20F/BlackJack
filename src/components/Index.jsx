@@ -1,24 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import hero from '../assets/Website/Index.png';
 import leaderboard from '../assets/Website/chips.png';
 import question from '../assets/Website/question.gif';
-import Loading from './Loading';
 
 export default function Index() {
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1500);
-
-        return () => clearTimeout(timer);
-    }, []);
-
     return (
         <>
-            {isLoading && <Loading />}
             <div className="min-h-screen flex">
                 <div className="flex-1 flex items-center justify-center text-white">
                     <div className="space-y-12">

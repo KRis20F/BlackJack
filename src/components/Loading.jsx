@@ -1,4 +1,5 @@
 import React from 'react';
+import flip from '../assets/Cards/Flip.gif';
 
 export default function Loading() {
     return (
@@ -6,7 +7,7 @@ export default function Loading() {
             <div className="text-center">
                 <div className="relative">
                     <img 
-                        src="/assets/Cards/Flip.gif"
+                        src={flip}
                         alt="loading" 
                         className="w-32 h-32 mx-auto mb-4"
                     />

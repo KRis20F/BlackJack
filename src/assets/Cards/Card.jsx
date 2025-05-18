@@ -17,15 +17,15 @@ export default function Card({ value, isHidden = false }) {
             const suit = cardString.slice(-1); // Obtener el palo (S, H, D, C)
             let cardValue = cardString.slice(0, -1); // Obtener el valor (3, K, etc.)
             
-            
-            // Las figuras (A, K, Q, J) y números usan el mismo formato
-            const imagePath = `./${suit}/${cardValue}.png`; //Like si eres un kristopher de corazon puro
-
-            console.log('Attempting to load:', imagePath); // Debug log
-            return new URL(imagePath, import.meta.url).href;
-            
+            try {
+                // Importar la imagen dinámicamente
+                return new URL(`./${suit}/${cardValue}.png`, import.meta.url).href;
+            } catch (error) {
+                console.error('Error loading card image:', error);
+                return cardBack;
+            }
         } catch (error) {
-            console.error('Error loading card image:', error, {value, path: error.path});
+            console.error('Error processing card value:', error);
             return cardBack;
         }
     };
@@ -37,7 +37,7 @@ export default function Card({ value, isHidden = false }) {
         <img 
             src={cardSrc}
             alt={isHidden ? "Hidden Card" : `${typeof value === 'string' ? value : value.value}`}
-            className="w-[108px] h-[138px] pixel-border"
+            className="w-[93px] h-[114px] pixel-border"
             onError={(e) => {
                 console.error('Error loading image for card:', value);
                 e.target.src = cardBack;
