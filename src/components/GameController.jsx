@@ -351,7 +351,7 @@ export default function useGameController() {
                 return;
             }
 
-            const dealerCards = [...initialCards.slice(0, 2)];
+            let dealerCards = [...initialCards.slice(0, 2)];
             let dealerValue = calculateHandValue(dealerCards);
             console.log('Dealer initial hand:', dealerValue);
 
@@ -382,17 +382,40 @@ export default function useGameController() {
 
             setDealerHand(dealerCards);
             
-            const playerCards = customPlayerHand ?? [...initialCards.slice(2, 4), ...playerHand];
-            const playerValue = calculateHandValue(playerCards);
+            // Usar la mano real del dealer y del jugador para la comparación final
+            dealerCards = dealerHand.length > 0 ? dealerHand : dealerCards;
+            const playerCards = customPlayerHand ?? (playerHand.length > 0 ? playerHand : initialCards.slice(2, 4));
+            // FORZAR que playerCards y dealerCards sean SIEMPRE las manos reales finales
+            dealerCards = dealerHand.length > 0 ? dealerHand : dealerCards;
+            const finalPlayerHand = playerHand.length > 0 ? playerHand : playerCards;
+            const finalDealerHand = dealerHand.length > 0 ? dealerHand : dealerCards;
+            const playerValue = calculateHandValue(finalPlayerHand);
+            const dealerValueFinal = calculateHandValue(finalDealerHand);
             
-            console.log('Final comparison - Player:', playerValue, 'Dealer:', dealerValue);
+            console.log('Final comparison - Player:', playerValue, 'Dealer:', dealerValueFinal);
             
             let result;
             if (dealerValue > 21) {
                 result = 'dealer_bust';
-            } else if (playerValue === dealerValue || (playerValue === 21 && dealerValue === 21)) {
-                result = 'push';
-            } else if (playerValue > dealerValue) {
+            } else if (playerValue === dealerValueFinal) {
+                // Ambos tienen el mismo valor
+                if (playerValue === 21 && dealerValue === 21) {
+                  // Ambos tienen 21
+                  const playerNatural = playerCards.length === 2;
+                  const dealerNatural = dealerCards.length === 2;
+                  if (playerNatural && dealerNatural) {
+                    result = 'push'; // Ambos blackjack natural
+                  } else if (playerNatural) {
+                    result = 'player_wins'; // Jugador blackjack natural
+                  } else if (dealerNatural) {
+                    result = 'dealer_wins'; // Dealer blackjack natural
+                  } else {
+                    result = 'push'; // Ambos 21, pero no blackjack natural
+                  }
+                } else {
+                  result = 'push'; // Empate normal para otros valores
+                }
+            } else if (playerValue > dealerValueFinal) {
                 result = 'player_wins';
             } else {
                 result = 'dealer_wins';

@@ -82,7 +82,10 @@ export default function PlayerCards({ cards }) {
         ))}
       </div>
       <div className="text-white text-xl mt-2 font-['Press_Start_2P']">
-        {altValue !== null ? `${value}/${altValue}` : value}
+        {/* Mostrar solo ambos valores si son distintos y ambos <=21; si son iguales o uno se pasa de 21, mostrar solo el válido */}
+        {altValue !== null && value !== altValue && altValue <= 21
+          ? `${value}/${altValue}`
+          : value}
       </div>
     </div>
   );
