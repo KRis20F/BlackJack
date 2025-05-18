@@ -8,39 +8,67 @@ export default function Login() {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        rememberMe: false
     });
 
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: value
         }));
+        setErrorMessage('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage('');
+        setIsLoading(true);
 
         try {
-            const response = await fetch(
-                `http://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`
-            );
+            console.log('Intentando login con:', formData.username);
+            
+            // Usar el proxy configurado en vite.config.js
+            const url = `/api/User/${formData.username}/${formData.password}`;
+            console.log('URL de login:', url);
+
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'text/plain'
+                }
+            });
+            const text = await response.text();
+            console.log('Respuesta del servidor:', text);
 
             if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('userId', data.id);
-                console.log('Usuario logueado, ID:', data.id);
-
-                navigate(from, { replace: true });
+                try {
+                    // La respuesta es un objeto con id y username como strings
+                    const data = JSON.parse(text);
+                    console.log('Datos parseados:', data);
+                    
+                    if (data && data.id) {
+                        localStorage.setItem('userId', data.id);
+                        console.log('Login exitoso. ID:', data.id);
+                        navigate(from, { replace: true });
+                    } else {
+                        console.error('Respuesta sin ID:', data);
+                        setErrorMessage('Error: Respuesta del servidor inválida');
+                    }
+                } catch (parseError) {
+                    console.error('Error al parsear respuesta:', parseError);
+                    setErrorMessage('Error al procesar la respuesta del servidor');
+                }
             } else {
-                setErrorMessage('Credenciales incorrectas');
+                console.error('Error de respuesta:', response.status, text);
+                setErrorMessage(text || 'Error en las credenciales');
             }
         } catch (error) {
-            setErrorMessage('Error al conectar con el servidor', error);
+            console.error('Error de conexión:', error);
+            setErrorMessage('Error de conexión con el servidor');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -51,8 +79,9 @@ export default function Login() {
 
                 <form onSubmit={handleSubmit} className="space-y-12">
                     <div>
-                        <label className="block text-xs mb-2">Username</label>
+                        <label htmlFor="username" className="block text-xs mb-2">Username</label>
                         <input
+                            id="username"
                             type="text"
                             name="username"
                             value={formData.username}
@@ -60,12 +89,15 @@ export default function Login() {
                             className="w-full px-4 py-2 bg-white text-black text-xs border border-white focus:outline-none"
                             placeholder="yourUsername"
                             required
+                            autoComplete="username"
+                            disabled={isLoading}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs mb-2">Password</label>
+                        <label htmlFor="password" className="block text-xs mb-2">Password</label>
                         <input
+                            id="password"
                             type="password"
                             name="password"
                             value={formData.password}
@@ -73,18 +105,25 @@ export default function Login() {
                             className="w-full px-4 py-2 bg-white text-black text-xs border border-white focus:outline-none"
                             placeholder="********"
                             required
+                            autoComplete="current-password"
+                            disabled={isLoading}
                         />
                     </div>
 
                     {errorMessage && (
-                        <p className="text-red-500 text-xs text-center">{errorMessage}</p>
+                        <p className="text-red-500 text-xs text-center break-words">{errorMessage}</p>
                     )}
 
                     <button
                         type="submit"
-                        className="w-full py-3 bg-[#46e446] text-[#301d79] hover:bg-[#e4e42c] transition-colors text-xs font-['Press_Start_2P'] cursor-pointer"
+                        className={`w-full py-3 ${
+                            isLoading 
+                                ? 'bg-gray-500 cursor-not-allowed' 
+                                : 'bg-[#46e446] hover:bg-[#e4e42c]'
+                        } text-[#301d79] transition-colors text-xs font-['Press_Start_2P']`}
+                        disabled={isLoading}
                     >
-                        ENTER
+                        {isLoading ? 'LOADING...' : 'ENTER'}
                     </button>
 
                     <p className="text-center text-xs">
