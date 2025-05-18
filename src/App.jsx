@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Index from './components/Index';
 import Game from './components/Game';
 import Login from './components/Login';
@@ -43,6 +43,9 @@ function App() {
               </ProtectedRoute>
             } 
           />
+
+          {/* Ruta para manejar URLs no encontradas */}
+          <Route path="*" element={<Index />} />
         </Routes>
       </Navbar>
     </Router>

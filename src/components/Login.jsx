@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const from = location.state?.from?.pathname || "/game";
     const [formData, setFormData] = useState({
         username: '',
         password: '',
     });
-
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/game";
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,39 +26,47 @@ export default function Login() {
         e.preventDefault();
         setErrorMessage('');
         setIsLoading(true);
+
+        let response = null;
+        let responseText = '';
         
         try {
-            const text = await response.text();
-
-            const response = await fetch(
-                `https://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`
-            );
-
-            if (response.ok) {
-                try {
-                    // La respuesta es un objeto con id y username como strings
-                    const data = JSON.parse(text);
-                    console.log('Datos parseados:', data);
-                    
-                    if (data && data.id) {
-                        localStorage.setItem('userId', data.id);
-                        console.log('Login exitoso. ID:', data.id);
-                        navigate(from, { replace: true });
-                    } else {
-                        console.error('Respuesta sin ID:', data);
-                        setErrorMessage('Error: Respuesta del servidor inválida');
-                    }
-                } catch (parseError) {
-                    console.error('Error al parsear respuesta:', parseError);
-                    setErrorMessage('Error al procesar la respuesta del servidor');
+            console.log('Intentando login con:', formData.username);
+            
+            response = await fetch(`http://alvarfs-001-site1.qtempurl.com/User/${formData.username}/${formData.password}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/plain',
+                    'Content-Type': 'application/json'
                 }
+            });
+
+            responseText = await response.text();
+            console.log('Respuesta del servidor:', responseText);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = JSON.parse(responseText);
+            console.log('Datos parseados:', data);
+            
+            if (data && data.id) {
+                localStorage.setItem('userId', data.id);
+                console.log('Login exitoso. ID:', data.id);
+                navigate(from, { replace: true });
             } else {
-                console.error('Error de respuesta:', response.status, text);
-                setErrorMessage(text || 'Error en las credenciales');
+                setErrorMessage('Error: Respuesta del servidor inválida');
             }
         } catch (error) {
-            console.error('Error de conexión:', error);
-            setErrorMessage('Error de conexión con el servidor');
+            console.error('Error:', error);
+            if (!response) {
+                setErrorMessage('Error de conexión con el servidor');
+            } else if (!response.ok) {
+                setErrorMessage(responseText || 'Error en las credenciales');
+            } else {
+                setErrorMessage('Error al procesar la respuesta del servidor');
+            }
         } finally {
             setIsLoading(false);
         }
