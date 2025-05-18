@@ -235,7 +235,11 @@ export default function useGameController() {
                 setGameEndReason('blackjack');
                 // Pago 3:2 para Blackjack natural
                 const blackjackPayout = betCash * 2.5;
-                setPlayerCash(prev => prev + blackjackPayout);
+                const newCash = playerCash + blackjackPayout;
+                setPlayerCash(newCash);
+                if (typeof updatePlayerCash === 'function') {
+                    updatePlayerCash(newCash);
+                }
                 setDealerHand(processedCards.slice(0, 2)); // Mantener las cartas del dealer visibles
             }
 
