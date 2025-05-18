@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useGame } from '../context/GameContext';
 
 const Navbar = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isGamePage = location.pathname === '/game';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const { playAgainHandler } = useGame();
 
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    setIsAuthenticated(!!userId);
+    
+    // Fetch username if authenticated
+    if (userId) {
+      fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.username) {
+            setUsername(data.username);
+          }
+        })
+        .catch(error => console.error('Error fetching username:', error));
+    }
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('playerCash');
+    localStorage.removeItem('gamePhase');
+    localStorage.removeItem('betCash');
+    setIsAuthenticated(false);
+    navigate('/');
+  };
 
   const normalNavbar = (
     <div className="min-h-screen flex flex-col" role='navigation'>
@@ -15,19 +45,35 @@ const Navbar = ({ children }) => {
             <span className="self-center text-4xl font-['Press_Start_2P'] text-[#e4e42c]">BlckJck</span>
           </Link>
           
-          <div className="flex md:order-2 space-x-4 md:space-x-4 rtl:space-x-reverse">
-            <Link
-              to="/login"
-              className="block py-2 px-3 text-[#67ed67] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="block py-2 px-3 text-[#e0366c] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
-            >
-              Register
-            </Link>
+          <div className="flex md:order-2 space-x-4 md:space-x-4 rtl:space-x-reverse items-center">
+            {isAuthenticated ? (
+              <>
+                <span className="text-white font-['Press_Start_2P'] text-sm hidden md:block">
+                  {username}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="block py-2 px-3 text-[#e0366c] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm hover:text-red-400"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block py-2 px-3 text-[#67ed67] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="block py-2 px-3 text-[#e0366c] text-hover-yellow rounded-sm md:p-0 font-['Press_Start_2P'] text-sm"
+                >
+                  Register
+                </Link>
+              </>
+            )}
 
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -45,7 +91,10 @@ const Navbar = ({ children }) => {
             <ul className="flex flex-col p-4 md:p-0 mt-4 font-['Press_Start_2P'] text-sm border-2 border-white rounded-lg 
                          bg-[#301d79] md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0">
               <li>
-                <Link to="/game" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
+                <Link 
+                  to={isAuthenticated ? "/game" : "/login"} 
+                  className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0"
+                >
                   Play
                 </Link>
               </li>
@@ -59,6 +108,13 @@ const Navbar = ({ children }) => {
                   Tutorial
                 </Link>
               </li>
+              {isAuthenticated && (
+                <li>
+                  <Link to="/stats" className="block py-2 px-3 text-white text-hover-yellow rounded-sm md:p-0">
+                    Stats
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -79,22 +135,51 @@ const Navbar = ({ children }) => {
           Menu
         </div>
         
-        {[
-          { text: 'Go Back', path: '/' }
-        ].map(({ text, path }) => (
-          <Link
-            key={text}
-            to={path}
-            className="w-32 py-2 px-4 bg-indigo-600 text-white border-2 border-white 
+        <div className="text-white font-['Press_Start_2P'] text-sm mb-4">
+          {username}
+        </div>
+
+        {playAgainHandler && (
+          <button
+            onClick={playAgainHandler}
+            className="w-32 py-2 px-4 bg-green-600 text-white border-2 border-white 
                      font-['Press_Start_2P'] text-sm uppercase tracking-wide
-                     shadow-[inset_-3px_-3px_0_0_#1a1a6c,inset_3px_3px_0_0_#6666ff]
-                     hover:scale-105 hover:bg-indigo-500 active:scale-95
+                     shadow-[inset_-3px_-3px_0_0_#006400,inset_3px_3px_0_0_#90EE90]
+                     hover:scale-105 hover:bg-green-500 active:scale-95
                      transition-all duration-100 ease-in-out
-                     active:shadow-[inset_3px_3px_0_0_#1a1a6c,inset_-3px_-3px_0_0_#6666ff]"
+                     active:shadow-[inset_3px_3px_0_0_#006400,inset_-3px_-3px_0_0_#90EE90]"
           >
-            {text}
-          </Link>
-        ))}
+            Play Again
+          </button>
+        )}
+        
+        <Link
+          to="/"
+          onClick={() => {
+            localStorage.removeItem('gamePhase');
+            localStorage.removeItem('betCash');
+          }}
+          className="w-32 py-2 px-4 bg-indigo-600 text-white border-2 border-white 
+                   font-['Press_Start_2P'] text-sm uppercase tracking-wide
+                   shadow-[inset_-3px_-3px_0_0_#1a1a6c,inset_3px_3px_0_0_#6666ff]
+                   hover:scale-105 hover:bg-indigo-500 active:scale-95
+                   transition-all duration-100 ease-in-out
+                   active:shadow-[inset_3px_3px_0_0_#1a1a6c,inset_-3px_-3px_0_0_#6666ff]"
+        >
+          Go Back
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="w-32 py-2 px-4 bg-red-600 text-white border-2 border-white 
+                   font-['Press_Start_2P'] text-sm uppercase tracking-wide
+                   shadow-[inset_-3px_-3px_0_0_#8b0000,inset_3px_3px_0_0_#ff6666]
+                   hover:scale-105 hover:bg-red-500 active:scale-95
+                   transition-all duration-100 ease-in-out
+                   active:shadow-[inset_3px_3px_0_0_#8b0000,inset_-3px_-3px_0_0_#ff6666]"
+        >
+          Logout
+        </button>
       </nav>
     </div>
   );

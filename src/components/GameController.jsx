@@ -3,21 +3,33 @@ import { useState, useCallback, useEffect } from 'react';
 export const CHIP_VALUES = {
     Black: 50,
     Green: 20,
-    Red: 1,
-    Blue: 5,
+    Red: 5,
+    Blue: 1,
     Yellow: 100
 };
 
 export default function useGameController() {
-    const [playerCash, setPlayerCash] = useState(100); // Start with 100€
+    const [playerCash, setPlayerCash] = useState(() => {
+        const saved = localStorage.getItem('playerCash');
+        return saved ? parseInt(saved) : 100;
+    });
     const [playerHand, setPlayerHand] = useState([]);
-    const [betCash, setBetCash] = useState(0);
+    const [splitHands, setSplitHands] = useState([]); // Array para manos divididas
+    const [currentSplitHand, setCurrentSplitHand] = useState(0); // Índice de la mano actual
+    const [hasSplit, setHasSplit] = useState(false);
+    const [betCash, setBetCash] = useState(() => {
+        const saved = localStorage.getItem('betCash');
+        return saved ? parseInt(saved) : 0;
+    });
     const [dealerHand, setDealerHand] = useState([]);
     const [currentRound, setCurrentRound] = useState(0);
     const [deckId, setDeckId] = useState(null);
     const [initialCards, setInitialCards] = useState([]);
     const [hasDoubled, setHasDoubled] = useState(false);
-    const [gamePhase, setGamePhase] = useState('betting'); // betting, playing, ended
+    const [gamePhase, setGamePhase] = useState(() => {
+        const saved = localStorage.getItem('gamePhase');
+        return saved || 'betting';
+    });
     const [gameEndReason, setGameEndReason] = useState(null); // 'bust' or 'stand'
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
@@ -36,34 +48,69 @@ export default function useGameController() {
         }
     }, []);
 
-    // Función para actualizar el saldo en el servidor
-    const updateUserCash = useCallback(async (newCash) => {
-        if (!isLoggedIn || !userId) {
-            console.log('User not logged in, skipping server update');
-            return;
-        }
-
-        try {
-            const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}/${newCash}`, {
-                method: 'PUT'
-            });
-
-            if (!response.ok) {
-                console.error('Failed to update user cash:', response.status);
-                return;
+    // Efecto para monitorear playerCash y resetearlo cuando llegue a 0
+    useEffect(() => {
+        if (playerCash <= 0) {
+            console.log('Player is out of money, resetting to 100');
+            const resetCash = 100;
+            setPlayerCash(resetCash);
+            localStorage.setItem('playerCash', resetCash);
+            
+            // Resetear el estado del juego
+            setGamePhase('betting');
+            setBetCash(0);
+            setPlayerHand([]);
+            setDealerHand([]);
+            setHasDoubled(false);
+            setCurrentRound(0);
+            setInitialCards([]);
+            
+            // Si el usuario está logueado, actualizar en el servidor
+            if (isLoggedIn && userId) {
+                fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}/${resetCash}`, {
+                    method: 'PUT'
+                }).catch(error => {
+                    console.error('Error updating user cash on server:', error);
+                });
             }
+        }
+    }, [playerCash, isLoggedIn, userId]);
 
-            console.log('User cash updated successfully:', { userId, newCash });
-        } catch (error) {
-            console.error('Error updating user cash:', error);
+    // Guardar estados importantes en localStorage
+    useEffect(() => {
+        if (playerCash) localStorage.setItem('playerCash', playerCash);
+        if (gamePhase) localStorage.setItem('gamePhase', gamePhase);
+        if (betCash) localStorage.setItem('betCash', betCash);
+    }, [playerCash, gamePhase, betCash]);
+
+    // Modificar updatePlayerCash para verificar si el jugador se queda sin dinero
+    const updatePlayerCash = useCallback(async (newCash) => {
+        // Si el nuevo saldo es 0 o negativo, resetear a 100
+        if (newCash <= 0) {
+            console.log('Preventing zero balance, resetting to 100');
+            newCash = 100;
+        }
+        
+        setPlayerCash(newCash);
+        localStorage.setItem('playerCash', newCash);
+        
+        if (isLoggedIn && userId) {
+            try {
+                const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}/${newCash}`, {
+                    method: 'PUT'
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to update user cash:', response.status);
+                    return;
+                }
+
+                console.log('User cash updated successfully:', { userId, newCash });
+            } catch (error) {
+                console.error('Error updating user cash:', error);
+            }
         }
     }, [isLoggedIn, userId]);
-
-    // Modificar setPlayerCash para que actualice el servidor cuando cambie el saldo
-    const updatePlayerCash = useCallback((newCash) => {
-        setPlayerCash(newCash);
-        updateUserCash(newCash);
-    }, [updateUserCash]);
 
     // Modificar las funciones que afectan al saldo para usar updatePlayerCash
     const handleGameEnd = useCallback(async (result) => {
@@ -103,13 +150,17 @@ export default function useGameController() {
             return false;
         }
 
-        if (betCash + chipValue > playerCash) {
-            console.log('Insufficient funds for total bet:', { totalBetAfterAdd: betCash + chipValue, playerCash });
+        const totalBetAfterAdd = betCash + chipValue;
+        console.log('Adding chip:', { chipValue, currentBet: betCash, totalBetAfterAdd, playerCash });
+        
+        // Verificar si el jugador tiene suficiente dinero para la apuesta total
+        if (chipValue > playerCash) {
+            console.log('Insufficient funds for chip:', { chipValue, playerCash });
             return false;
         }
         
         updatePlayerCash(playerCash - chipValue);
-        setBetCash(prev => prev + chipValue);
+        setBetCash(totalBetAfterAdd);
         return true;
     }, [playerCash, betCash, gamePhase, updatePlayerCash]);
 
@@ -119,10 +170,15 @@ export default function useGameController() {
             return false;
         }
 
-        updatePlayerCash(playerCash + chipValue);
-        setBetCash(prev => prev - chipValue);
+        const newBetCash = betCash - chipValue;
+        const newPlayerCash = playerCash + chipValue;
+        
+        console.log('Removing chip:', { chipValue, currentBet: betCash, newBetCash, newPlayerCash });
+        
+        updatePlayerCash(newPlayerCash);
+        setBetCash(newBetCash);
         return true;
-    }, [gamePhase, playerCash, updatePlayerCash]);
+    }, [gamePhase, playerCash, betCash, updatePlayerCash]);
 
     const clearBet = useCallback(() => {
         setBetCash(0);
@@ -345,41 +401,62 @@ export default function useGameController() {
     const handleDrop = async () => {
         if (gamePhase !== 'playing') return;
 
-        const recoveryPercentage = 100 / (currentRound + 1);
-        const recoveryAmount = Math.floor(betCash * (recoveryPercentage / 100));
+        // Calcular el porcentaje de recuperación basado en la ronda actual
+        // Ronda 1: 50%, Ronda 2: 25%, Ronda 3: 12.5%, etc.
+        const recoveryPercentage = 50;  // Siempre recuperar el 50%
+        const recoveryAmount = Math.floor(betCash * 0.5);  // Multiplicar por 0.5 para obtener el 50%
+
+        console.log('Drop calculation:', { currentRound, recoveryPercentage, recoveryAmount, betCash });
 
         if (recoveryAmount < 1) {
             console.log('Cannot drop - recovery amount too low');
             return;
         }
 
+        // Actualizar el saldo del jugador
         const newCash = playerCash + recoveryAmount;
-        await updateUserCash(newCash);
-        setPlayerCash(newCash);
-        setBetCash(0);
+        updatePlayerCash(newCash);
+
+        // Finalizar el juego sin mostrar las cartas del dealer
         setGamePhase('ended');
         setGameEndReason('drop');
+        
+        // Mantener solo la primera carta del dealer visible
+        setDealerHand([initialCards[0]]);
+        
+        // Resetear la apuesta
+        setBetCash(0);
+
+        return recoveryAmount;
     };
 
     const handleDouble = async () => {
-        if (gamePhase !== 'playing' || currentRound > 1 || playerCash < betCash || hasDoubled) {
-            console.log('Cannot double:', { gamePhase, currentRound, playerCash, betCash, hasDoubled });
-            return;
+        console.log('Double attempted:', { gamePhase, hasDoubled, playerCash, betCash });
+        
+        if (gamePhase !== 'playing' || hasDoubled) {
+            console.log('Cannot double - wrong game phase or already doubled');
+            return null;
         }
 
         try {
-            // Primero verificamos que podemos doblar
+            // Verificar si tenemos suficiente dinero para doblar
             if (playerCash < betCash) {
                 console.log('Insufficient funds to double');
-                return;
+                return null;
             }
 
-            // Doblamos la apuesta
-            setPlayerCash(prev => prev - betCash);
-            setBetCash(prev => prev * 2);
+            console.log('Doubling bet:', { currentBet: betCash, newBet: betCash * 2, playerCash });
+
+            // Doblar la apuesta y actualizar el saldo
+            const doubledBet = betCash * 2;
+            const newCash = playerCash - betCash; // Restar la cantidad adicional
+            
+            // Primero actualizar el saldo y la apuesta
+            updatePlayerCash(newCash);
+            setBetCash(doubledBet);
             setHasDoubled(true);
 
-            // Pedimos una carta adicional
+            // Pedir una carta adicional
             const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckId}/1`);
             const data = await response.json();
             const newCard = {
@@ -387,32 +464,35 @@ export default function useGameController() {
                 suit: data.cards[0].slice(-1)
             };
             
-            // Actualizamos la mano con la nueva carta
+            // Actualizar la mano con la nueva carta
             const newHand = [...playerHand, newCard];
             setPlayerHand(newHand);
             
-            // Calculamos el valor total
+            // Calcular el valor total
             const currentCards = [...initialCards.slice(2, 4), ...newHand];
             const handValue = calculateHandValue(currentCards);
             
-            console.log('Double down result:', { handValue, newCard });
+            console.log('Double down result:', { handValue, newCard, doubledBet });
             
-            // Verificamos si nos pasamos de 21
+            // Verificar si nos pasamos de 21
             if (handValue > 21) {
                 setGamePhase('ended');
                 setGameEndReason('bust');
-                return;
+                return newCard;
             }
             
             // Automáticamente nos plantamos después de recibir la carta
             await handleStand();
             
+            return newCard;
+            
         } catch (error) {
             console.error('Error during double:', error);
             // Revertir cambios si hay error
-            setPlayerCash(prev => prev + betCash);
-            setBetCash(prev => prev / 2);
             setHasDoubled(false);
+            updatePlayerCash(playerCash);
+            setBetCash(betCash);
+            return null;
         }
     };
 
@@ -422,6 +502,81 @@ export default function useGameController() {
                playerCash >= betCash && 
                !hasDoubled;
     }, [gamePhase, currentRound, playerCash, betCash, hasDoubled]);
+
+    const canSplit = useCallback(() => {
+        if (gamePhase !== 'playing' || currentRound !== 1 || hasSplit) return false;
+        
+        // Obtener las dos cartas iniciales del jugador
+        const playerCards = initialCards.slice(2, 4);
+        if (playerCards.length !== 2) return false;
+
+        // Obtener los valores de las cartas
+        const value1 = playerCards[0].value.slice(0, -1);
+        const value2 = playerCards[1].value.slice(0, -1);
+
+        // Verificar si los valores son iguales
+        return value1 === value2 && playerCash >= betCash;
+    }, [gamePhase, currentRound, hasSplit, initialCards, playerCash, betCash]);
+
+    const handleSplit = async () => {
+        if (!canSplit()) return;
+
+        try {
+            // Doblar la apuesta
+            const newCash = playerCash - betCash;
+            updatePlayerCash(newCash);
+            setBetCash(betCash * 2);
+
+            // Dividir las cartas en dos manos
+            const playerCards = initialCards.slice(2, 4);
+            
+            // Pedir dos cartas nuevas, una para cada mano
+            const response = await fetch(`http://alvarfs-001-site1.qtempurl.com/Cards/GetCards/${deckId}/2`);
+            const data = await response.json();
+            
+            // Crear las dos manos divididas
+            const hand1 = [playerCards[0], { value: data.cards[0], suit: data.cards[0].slice(-1) }];
+            const hand2 = [playerCards[1], { value: data.cards[1], suit: data.cards[1].slice(-1) }];
+            
+            setSplitHands([hand1, hand2]);
+            setCurrentSplitHand(0);
+            setHasSplit(true);
+
+            // Si son ases, terminar automáticamente
+            if (playerCards[0].value.startsWith('A')) {
+                // Manejar automáticamente ambas manos
+                await handleSplitAces(hand1, hand2);
+            }
+
+        } catch (error) {
+            console.error('Error during split:', error);
+            // Revertir cambios si hay error
+            updatePlayerCash(playerCash);
+            setBetCash(betCash);
+        }
+    };
+
+    const handleSplitAces = async (hand1, hand2) => {
+        // Con ases divididos, el jugador solo recibe una carta por mano y termina automáticamente
+        setGamePhase('ended');
+        await handleStand();
+    };
+
+    // Función para reiniciar el juego
+    const resetGame = useCallback(() => {
+        setGamePhase('betting');
+        setGameEndReason(null);
+        setBetCash(0);
+        setPlayerHand([]);
+        setDealerHand([]);
+        setHasDoubled(false);
+        setCurrentRound(0);
+        setInitialCards([]);
+        
+        // Limpiar estados del juego pero mantener el saldo
+        localStorage.removeItem('gamePhase');
+        localStorage.removeItem('betCash');
+    }, []);
 
     return {
         playerCash,
@@ -444,11 +599,16 @@ export default function useGameController() {
         handleStand,
         handleDrop,
         handleDouble,
-        canDouble,
+        handleSplit,
+        canSplit,
+        hasSplit,
+        splitHands,
+        currentSplitHand,
         gamePhase,
         hasDoubled,
         gameEndReason,
-        isLoggedIn
+        isLoggedIn,
+        resetGame
     };
 }
 
