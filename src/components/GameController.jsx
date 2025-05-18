@@ -8,11 +8,10 @@ export const CHIP_VALUES = {
     Yellow: 100
 };
 
+import { useGame } from '../context/GameContext';
+
 export default function useGameController() {
-    const [playerCash, setPlayerCash] = useState(() => {
-        const saved = localStorage.getItem('playerCash');
-        return saved ? parseInt(saved) : 100;
-    });
+    const { playerCash, setPlayerCash } = useGame();
 
     // Sincronizar playerCash con localStorage si cambia externamente
     useEffect(() => {

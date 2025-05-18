@@ -49,8 +49,8 @@ export default function BlackjackGame() {
   const { setPlayAgainHandler } = useGame();
   const [dropDeckFrame, setDropDeckFrame] = useState(1);
 
-  const {
-    playerCash,
+  const { playerCash, setPlayerCash } = useGame();
+const {
     betCash,
     handleChipAdd,
     handleChipRemove,

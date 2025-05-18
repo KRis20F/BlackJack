@@ -126,7 +126,7 @@ const Navbar = ({ children }) => {
     </div>
   );
 
-  const { playerCash, betCash } = useGameController();
+  const { playerCash } = useGame();
 
   const gameNavbar = (
     <div className="min-h-screen flex">
