@@ -80,7 +80,56 @@ export default function BlackjackGame() {
     setTimeout(() => setIsLoading(false), 2000);
   }, []);
 
-  const handlePlayAgain = useCallback(() => {
+  const handlePlayAgain = useCallback(async () => {
+    console.log('[PlayAgain] Handler called');
+    const userId = localStorage.getItem('userId');
+    let recargado = false;
+    if (userId) {
+      try {
+        // 1. Consultar el usuario
+        const res = await fetch(`https://alvarfs-001-site1.qtempurl.com/User/${userId}`);
+        if (res.ok) {
+          const user = await res.json();
+          console.log('[PlayAgain] User data:', user);
+          if (user.cash <= 0) {
+            // 2. Si no tiene cash, recargarle 50
+            const putRes = await fetch(`https://alvarfs-001-site1.qtempurl.com/User/${userId}/50`, { method: 'PUT' });
+            if (putRes.ok) {
+              console.log('[PlayAgain] Saldo recargado a 50$');
+              recargado = true;
+            } else {
+              alert('Error al recargar saldo');
+              console.error('[PlayAgain] Error al recargar saldo');
+            }
+          }
+        } else {
+          alert('Error al consultar usuario');
+          console.error('[PlayAgain] Error al consultar usuario');
+        }
+      } catch (err) {
+        alert('Error al consultar/recargar saldo');
+        console.error('[PlayAgain] Error al consultar/recargar saldo:', err);
+      }
+    }
+    // Si se recargó, vuelve a consultar el saldo y actualiza el estado
+    if (recargado && userId) {
+      try {
+        const res = await fetch(`https://alvarfs-001-site1.qtempurl.com/User/${userId}`);
+        if (res.ok) {
+          const user = await res.json();
+          if (typeof user.cash === 'number') {
+            // Actualiza el estado del cash en el GameController
+            if (typeof window.setPlayerCash === 'function') {
+              window.setPlayerCash(user.cash);
+            }
+            // Si no, fuerza recarga localStorage (si usas localStorage en GameController)
+            localStorage.setItem('playerCash', user.cash);
+          }
+        }
+      } catch (err) {
+        console.error('[PlayAgain] Error al actualizar cash después de recarga:', err);
+      }
+    }
     resetGame();
     setBettingChips([]);
     setShowCards(false);
@@ -313,7 +362,7 @@ export default function BlackjackGame() {
                 </div>
               ) : controllerGameEndReason === 'drop' ? (
                 <div className="text-yellow-400 text-4xl font-['Press_Start_2P']">
-                  Dropped Out - Recovered {Math.floor(betCash * 0.5)}₴
+                  Dropped Out - Recovered ${recoveryAmount}
                 </div>
               ) : null}
             </div>
@@ -340,11 +389,6 @@ export default function BlackjackGame() {
                   <PlayerCards cards={[card]} />
                 </div>
               ))}
-            </div>
-            {/* Mensaje de recuperación */}
-            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 whitespace-nowrap
-                          text-yellow-400 text-xl font-['Press_Start_2P'] animate-bounce">
-              Recovered ${recoveryAmount}
             </div>
           </div>
         )}

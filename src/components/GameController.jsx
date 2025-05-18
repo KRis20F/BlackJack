@@ -13,6 +13,23 @@ export default function useGameController() {
         const saved = localStorage.getItem('playerCash');
         return saved ? parseInt(saved) : 100;
     });
+
+    // Sincronizar playerCash con localStorage si cambia externamente
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === 'playerCash') {
+                setPlayerCash(parseInt(e.newValue) || 0);
+            }
+        };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
+    }, []);
+
+    // Para forzar sincronización tras Play Again desde la misma pestaña
+    useEffect(() => {
+        window.setPlayerCash = setPlayerCash;
+        return () => { delete window.setPlayerCash; };
+    }, []);
     const [playerHand, setPlayerHand] = useState([]);
     const [splitHands, setSplitHands] = useState([]); // Array para manos divididas
     const [currentSplitHand, setCurrentSplitHand] = useState(0); // Índice de la mano actual
@@ -48,33 +65,13 @@ export default function useGameController() {
         }
     }, []);
 
-    // Efecto para monitorear playerCash y resetearlo cuando llegue a 0
+    // Efecto para monitorear playerCash y mostrar mensaje si llega a 0
     useEffect(() => {
         if (playerCash <= 0) {
-            console.log('Player is out of money, resetting to 100');
-            const resetCash = 100;
-            setPlayerCash(resetCash);
-            localStorage.setItem('playerCash', resetCash);
-            
-            // Resetear el estado del juego
-            setGamePhase('betting');
-            setBetCash(0);
-            setPlayerHand([]);
-            setDealerHand([]);
-            setHasDoubled(false);
-            setCurrentRound(0);
-            setInitialCards([]);
-            
-            // Si el usuario está logueado, actualizar en el servidor
-            if (isLoggedIn && userId) {
-                fetch(`http://alvarfs-001-site1.qtempurl.com/User/${userId}/${resetCash}`, {
-                    method: 'PUT'
-                }).catch(error => {
-                    console.error('Error updating user cash on server:', error);
-                });
-            }
+            console.log('Player is out of money, balance is 0');
+            // Aquí puedes mostrar un mensaje de "Sin saldo" o bloquear la UI desde el componente principal
         }
-    }, [playerCash, isLoggedIn, userId]);
+    }, [playerCash]);
 
     // Guardar estados importantes en localStorage
     useEffect(() => {
@@ -83,14 +80,9 @@ export default function useGameController() {
         if (betCash) localStorage.setItem('betCash', betCash);
     }, [playerCash, gamePhase, betCash]);
 
-    // Modificar updatePlayerCash para verificar si el jugador se queda sin dinero
+    // Modificar updatePlayerCash para dejar el saldo en 0 si se queda sin dinero
     const updatePlayerCash = useCallback(async (newCash) => {
-        // Si el nuevo saldo es 0 o negativo, resetear a 100
-        if (newCash <= 0) {
-            console.log('Preventing zero balance, resetting to 100');
-            newCash = 100;
-        }
-        
+        if (newCash < 0) newCash = 0;
         setPlayerCash(newCash);
         localStorage.setItem('playerCash', newCash);
         
@@ -106,6 +98,7 @@ export default function useGameController() {
                 }
 
                 console.log('User cash updated successfully:', { userId, newCash });
+                // Aquí podrías comprobar si el backend responde con cash = 0 y mostrar un mensaje especial
             } catch (error) {
                 console.error('Error updating user cash:', error);
             }
@@ -134,7 +127,7 @@ export default function useGameController() {
                 newCash = playerCash; // El jugador pierde su apuesta
                 break;
             default:
-                newCash = 100; // Reset to default if something unexpected happens
+                newCash = playerCash; // No reset automático, solo mantener el saldo actual
         }
 
         updatePlayerCash(newCash);
@@ -403,10 +396,13 @@ export default function useGameController() {
 
         // Calcular el porcentaje de recuperación basado en la ronda actual
         // Ronda 1: 50%, Ronda 2: 25%, Ronda 3: 12.5%, etc.
-        const recoveryPercentage = 50;  // Siempre recuperar el 50%
-        const recoveryAmount = Math.floor(betCash * 0.5);  // Multiplicar por 0.5 para obtener el 50%
+        const round = currentRound || 1; // Por si currentRound es 0 o undefined
+        let recoveryPercentage = 50 / Math.pow(2, round - 1);
+        if (recoveryPercentage < 2) recoveryPercentage = 2; // Para asegurar que recoveryAmount >= 1
+        let recoveryAmount = Math.floor(betCash * (recoveryPercentage / 100));
+        if (recoveryAmount < 1) recoveryAmount = 1;
 
-        console.log('Drop calculation:', { currentRound, recoveryPercentage, recoveryAmount, betCash });
+        console.log('Drop calculation:', { currentRound: round, recoveryPercentage, recoveryAmount, betCash });
 
         if (recoveryAmount < 1) {
             console.log('Cannot drop - recovery amount too low');
