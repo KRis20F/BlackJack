@@ -333,7 +333,8 @@ export default function useGameController() {
             // Si llegamos a 21, nos plantamos automáticamente
             if (handValue === 21) {
                 console.log('Player reached 21, auto-standing');
-                await handleStand();
+                // Pasar la mano real completa para evitar el bug de estado asíncrono
+                await handleStand([...initialCards.slice(2, 4), ...newHand]);
                 return newCard;
             }
             
@@ -387,7 +388,13 @@ export default function useGameController() {
             setDealerHand(dealerCards);
             
             // Usar siempre las manos locales finales para la comparación
-            const finalPlayerHand = customPlayerHand ?? (playerHand.length > 0 ? playerHand : initialCards.slice(2, 4));
+            let finalPlayerHand;
+            if (customPlayerHand) {
+                finalPlayerHand = customPlayerHand;
+            } else {
+                // Siempre combinar las cartas iniciales + todas las cartas extra del jugador
+                finalPlayerHand = [...initialCards.slice(2, 4), ...playerHand];
+            }
             const finalDealerHand = dealerCards; // variable local, no state
 
             const playerValue = calculateHandValue(finalPlayerHand);
