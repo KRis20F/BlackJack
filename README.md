@@ -1,4 +1,10 @@
-# 🎰 Juego de BlackJack
+# 🎰 BLCKJCK
+
+https://kris20f.github.io/BlackJack/
+
+# 🖥️ Backend
+
+https://github.com/alvarfs/BlackJackApi/
 
 ## 📝 Descripción
 Una implementación moderna del clásico juego de casino BlackJack construida con React. Esta aplicación web presenta una interfaz con estilo pixel art, animaciones fluidas y jugabilidad en tiempo real.
@@ -62,11 +68,6 @@ Manejan la renderización y animación de cartas para:
    - Recibir exactamente una carta más
    - Disponible solo en mano inicial
    - Requiere fondos suficientes
-
-4. **Dividir (Split)**
-   - Dividir pares en dos manos
-   - Disponible cuando las cartas iniciales tienen el mismo valor
-   - Requiere igualar la apuesta original
 
 5. **Retirarse (Drop)**
    - Rendirse en la mano actual
@@ -172,67 +173,6 @@ Se aceptan issues y solicitudes de mejoras.
 
 ## 📄 Licencia
 Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para detalles.
-
-# 🖥️ Backend
-
-https://github.com/alvarfs/BlackJackApi/
-
-# 🎲 Reglas del Juego
-
-## 🔹 Antes de empezar la ronda
-- No hay cartas en juego.
-- El jugador solo puede **arrastrar fichas al área de apuesta**.
-- La acción **BET** se muestra solo si hay **al menos una ficha** en el recuadro.
-
-## 🔹 Ronda 1 (inicio de la mano)
-- Se reparten **2 cartas** al jugador y **2 al crupier** (una boca abajo).
-- Tras el reparto, se muestran las siguientes acciones posibles:
-
-### ✅ PEDIR / PLANTARSE
-- **PEDIR:** Robas una carta adicional.
-- **PLANTARSE:** Te plantas con tu puntuación actual.
-
-### ✅ RETIRARSE
-- Te retiras voluntariamente y recuperas parte de tu apuesta:
-  - En la ronda inicial recuperas el **50%**.
-  - Por cada carta extra robada, el valor recuperable se reduce progresivamente (ej: 25%, 12.5%, etc.).
-  - No se permite retirarse si el valor a recuperar es **menor a 1€**.
-
-### ✅ DOBLAR
-- Doblas tu apuesta inicial.
-- Recibes **una sola carta adicional**.
-- Tu turno termina automáticamente.
-
-### ✅ DIVIDIR
-- Solo disponible si tus 2 cartas tienen el mismo valor.
-- Doblas tu apuesta inicial.
-- Divides tu mano en 2 manos independientes, cada una con una nueva carta.
-- **Limitaciones para ases:** tras dividir A's, normalmente solo recibes **una carta por mano**.
-
-## 🔹 Ronda 2+
-- Si no te has plantado ni has doblado:
-  - Solo puedes realizar: **PEDIR**, **PLANTARSE** o **RETIRARSE**.
-
----
-
-## ⚙️ Detalles Importantes
-
-- 📊 Información visible:
-  - Tu **saldo actual**
-  - **Apuesta en mesa**
-  - Tu **puntuación** actual
-  - **Puntuación visible** del crupier
-  
-- 💰 Pagos:
-  - **Blackjack natural (A + 10/J/Q/K):** 3:2
-  - **Victoria normal:** 1:1
-  - **Empate:** Recuperas la apuesta
-  - **Derrota:** Pierdes la apuesta
-
-- 💸 Requisitos de saldo:
-  - No puedes usar **DOBLAR** ni **DIVIDIR** si no tienes suficiente saldo para doblar tu apuesta inicial.
-
-# BlackJack Game 🎮
 
 ## Justificación y Motivación del Proyecto
 
